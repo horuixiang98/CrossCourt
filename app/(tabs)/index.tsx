@@ -1,98 +1,87 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { Colors } from "@/constants/theme";
+import { Image } from "expo-image";
+import { StyleSheet, Text, View } from "react-native";
+import CountryFlag from "react-native-country-flag";
+import MiniApp from "../indexPage/miniApp";
+import Search from "../indexPage/search";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
-
-export default function HomeScreen() {
+function HomeScreen() {
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
+    <View style={styles.container}>
+      <View style={styles.ProfileHeader}>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <View>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text
+                style={{ fontSize: 25, fontWeight: "bold", color: "#1c1c1cb7" }}
+              >
+                Ryanxavier Ho,
+              </Text>
+              <CountryFlag
+                isoCode="MY"
+                size={20}
+                style={{ margin: 10, marginTop: 15 }}
               />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+              {/* <Feather name="arrow-right-circle" size={23} color="#222222b7"/> */}
+            </View>
+            <View>
+              <Text
+                style={{ fontSize: 12, color: "#1c1c1c92", paddingBottom: 5 }}
+              >
+                Ranked No. 32 in Kuala Lumpur
+              </Text>
+            </View>
+          </View>
+          <Image
+            style={[styles.ProfileImage, { width: 80 }]}
+            source={{ uri: "https://picsum.photos/seed/696/3000/2000" }} // Network image
+            // OR
+            // source={require('./assets/my-local-image.png')} // Local image
+            contentFit="cover" // How the image should be resized
+            transition={1000} // Transition duration in ms
+          />
+        </View>
+      </View>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <Search />
+
+      <MiniApp />
+    </View>
   );
 }
 
+export default HomeScreen;
+
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    margin: 15,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  BorderBackground: {
+    padding: 20,
+    borderRadius: 20,
+    width: "100%",
+    backgroundColor: Colors.light.lightgray,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  ProfileHeader: {
+    padding: 10,
+    marginTop: 20,
+    paddingVertical: 10,
+    borderRadius: 10,
+    // height: 150,
+    width: "100%",
+    backgroundColor: Colors.light.lightgray,
+  },
+  ProfileImage: {
+    aspectRatio: 1,
+    backgroundColor: "#0553",
+    borderRadius: 10,
+    marginTop: 10,
+    marginBottom: 10,
   },
 });
