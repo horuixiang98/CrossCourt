@@ -1,19 +1,22 @@
-import { StyleSheet, Text, View } from "react-native";
+import Account from "@/components/Account";
+import { useSession } from "@/providers/SessionProvider";
+import { View } from "react-native";
 
 function HomeScreen() {
-    return (
-        <View style={styles.container}>
-            <Text>Account</Text>
-        </View>
-    );
+  const { session } = useSession();
+  return (
+    <View>
+      <Account session={session} />
+    </View>
+  );
 }
 
 export default HomeScreen;
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-});
+// const styles = StyleSheet.create({
+//   container: {
+//     flex: 1,
+//     alignItems: "center",
+//     justifyContent: "center",
+//   },
+// });

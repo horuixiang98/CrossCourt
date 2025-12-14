@@ -1,4 +1,5 @@
 import { Colors } from "@/constants/theme";
+import { useSession } from "@/providers/SessionProvider";
 import { Image } from "expo-image";
 import { StyleSheet, Text, View } from "react-native";
 import CountryFlag from "react-native-country-flag";
@@ -6,6 +7,7 @@ import MiniApp from "../indexPage/miniApp";
 import Search from "../indexPage/search";
 
 function HomeScreen() {
+  const { session } = useSession();
   return (
     <View style={styles.container}>
       <View style={styles.ProfileHeader}>
