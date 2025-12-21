@@ -41,7 +41,7 @@ export default Search;
 
 const styles = StyleSheet.create({
   container: {
-    paddingVertical: 15,
+    paddingVertical: 10,
   },
   searchBar: {
     flexDirection: "row",

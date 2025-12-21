@@ -1,7 +1,7 @@
 import { Colors } from "@/constants/theme";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React, { useState } from "react";
-import { LayoutChangeEvent, StyleSheet, View } from "react-native";
+import { LayoutChangeEvent, StyleSheet } from "react-native";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +9,10 @@ import Animated, {
 } from "react-native-reanimated";
 import TabBarButton from "./TabBarButton";
 
+import { useTabBar } from "@/providers/TabBarProvider";
+
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const { tabBarTranslateY } = useTabBar();
   const [diamensions, setDiamensions] = useState({ height: 20, width: 100 });
   const buttonWidth = diamensions.width / state.routes.length;
   const onTabbarLayout = (e: LayoutChangeEvent) => {
@@ -26,8 +29,17 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     };
   });
 
+  const containerAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateY: tabBarTranslateY.value }],
+    };
+  });
+
   return (
-    <View onLayout={onTabbarLayout} style={styles.tabbar}>
+    <Animated.View
+      onLayout={onTabbarLayout}
+      style={[styles.tabbar, containerAnimatedStyle]}
+    >
       <Animated.View
         style={[
           animatedStyle,
@@ -36,7 +48,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             backgroundColor: Colors.light.lightgreen,
             borderRadius: 30,
             marginHorizontal: 12,
-            height: diamensions.height - 15,
+            height: diamensions.height - 5,
             width: buttonWidth - 25,
           },
         ]}
@@ -54,7 +66,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
 
         const onPress = () => {
           tabPositionX.value = withSpring(index * buttonWidth, {
-            duration: 1500,
+            duration: 800,
           });
           const event = navigation.emit({
             type: "tabPress",
@@ -85,7 +97,7 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           />
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 
