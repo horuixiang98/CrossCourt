@@ -1,8 +1,14 @@
 import { Colors } from "@/constants/theme";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/src/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
-import * as Linking from "expo-linking";
-import * as WebBrowser from "expo-web-browser";
+import Constants from "expo-constants";
+// Google Sign-In - Commented out for Expo Go compatibility
+// Uncomment when using a development build
+// import {
+//   GoogleSignin,
+//   isSuccessResponse,
+//   statusCodes,
+// } from "@react-native-google-signin/google-signin";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -36,6 +42,9 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
 
+  // Check if running in Expo Go
+  const isExpoGo = Constants.appOwnership === "expo";
+
   async function signInWithEmail() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
@@ -63,38 +72,53 @@ export default function SignIn() {
     setLoading(false);
   }
 
+  // Google Sign-In - Commented out for Expo Go compatibility
+  // React.useEffect(() => {
+  //   GoogleSignin.configure({
+  //     webClientId:
+  //       process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
+  //       "YOUR_CLIENT_ID_FROM_GOOGLE_CONSOLE",
+  //   });
+  // }, []);
+
   async function performGoogleSignIn() {
-    try {
-      setLoading(true);
-      const redirectUrl = Linking.createURL("/");
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectUrl,
-          skipBrowserRedirect: true,
-        },
-      });
-
-      if (error) throw error;
-
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(
-          data.url,
-          redirectUrl
-        );
-
-        if (result.type === "success" && result.url) {
-          // In a real app, you might need to parse the URL to extract tokens
-          // if Supabase doesn't automatically detect the session change.
-          // However, often the onAuthStateChange listener in your provider will pick it up
-          // if the deep link is handled correctly by the app.
-        }
-      }
-    } catch (error) {
-      if (error instanceof Error) Alert.alert(error.message);
-    } finally {
-      setLoading(false);
+    // Temporarily disabled for Expo Go
+    if (isExpoGo) {
+      Alert.alert(
+        "Google Sign-In Unavailable",
+        "Google Sign-In requires a development build. Please use email/password login in Expo Go, or create a development build to use Google Sign-In.",
+        [{ text: "OK" }]
+      );
+      return;
     }
+
+    // Native Google Sign-In code (uncomment when using development build)
+    // try {
+    //   setLoading(true);
+    //   await GoogleSignin.hasPlayServices();
+    //   const response = await GoogleSignin.signIn();
+    //   if (isSuccessResponse(response)) {
+    //     if (response.data.idToken) {
+    //       const { data, error } = await supabase.auth.signInWithIdToken({
+    //         provider: "google",
+    //         token: response.data.idToken,
+    //       });
+    //       if (error) throw error;
+    //     } else {
+    //       throw new Error("No ID token present in response");
+    //     }
+    //   }
+    // } catch (error: any) {
+    //   if (error.code === statusCodes.IN_PROGRESS) {
+    //     // operation in progress
+    //   } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+    //     Alert.alert("Google Play Services not available or outdated");
+    //   } else {
+    //     Alert.alert("Google Sign-In Error", error.message);
+    //   }
+    // } finally {
+    //   setLoading(false);
+    // }
   }
 
   return (

@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import 'expo-sqlite/localStorage/install';
 
-const supabaseUrl = "https://hgeeiagsozagtmzchann.supabase.co";
-const supabasePublishableKey = "sb_publishable_wudcsxFIQosxd-no0JwNLw_AJtwc8JW";
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const supabasePublishableKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabasePublishableKey, {
   auth: {

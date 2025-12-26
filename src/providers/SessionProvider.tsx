@@ -1,4 +1,4 @@
-import { supabase } from "@/utils/supabase"; // Adjust path as needed
+import { supabase } from "@/src/utils/supabase"; // Adjust path as needed
 import { Session } from "@supabase/supabase-js";
 import React, { createContext, useContext, useEffect, useState } from "react";
 

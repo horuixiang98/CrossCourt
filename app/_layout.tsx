@@ -1,6 +1,6 @@
-import { useColorScheme } from "@/hooks/use-color-scheme";
-import { SessionProvider, useSession } from "@/providers/SessionProvider";
-import { TabBarProvider } from "@/providers/TabBarProvider";
+import { useColorScheme } from "@/src/hooks/use-color-scheme";
+import { SessionProvider, useSession } from "@/src/providers/SessionProvider";
+import { TabBarProvider } from "@/src/providers/TabBarProvider";
 import {
   DarkTheme,
   DefaultTheme,
@@ -37,7 +37,7 @@ export default function RootLayout() {
 
 function InitialAppLayout() {
   const { session, isLoading } = useSession();
-  const segments = useSegments();
+  const segments = useSegments() as string[];
   const router = useRouter();
   const colorScheme = useColorScheme();
   const [isWelcomeFinished, setIsWelcomeFinished] = useState(false);
@@ -59,11 +59,11 @@ function InitialAppLayout() {
     if (isLoading || !isWelcomeFinished) return;
 
     const checkStatus = async () => {
-      const inAuthGroup = segments[0] === "auth";
+      const inAuthGroup = segments[0] === "screen" && segments[1] === "auth";
 
       if (!session) {
-        if (segments[0] !== "auth") {
-          router.replace("/auth/signin");
+        if (!inAuthGroup) {
+          router.replace("/screen/auth/signin");
         }
         return;
       }
@@ -75,9 +75,9 @@ function InitialAppLayout() {
           await ExpoLocation.getForegroundPermissionsAsync();
         if (locationStatus !== "granted") {
           const isLocationPage =
-            segments[0] === "auth" && segments[1] === "enableLocation";
+            inAuthGroup && segments[2] === "enableLocation";
           if (!isLocationPage) {
-            router.replace("/auth/enableLocation");
+            router.replace("/screen/auth/enableLocation");
           }
           return;
         }
@@ -91,9 +91,9 @@ function InitialAppLayout() {
               await Notifications.getPermissionsAsync();
             if (notificationStatus !== "granted") {
               const isNotificationPage =
-                segments[0] === "auth" && segments[1] === "enableNotification";
+                inAuthGroup && segments[2] === "enableNotification";
               if (!isNotificationPage) {
-                router.replace("/auth/enableNotification");
+                router.replace("/screen/auth/enableNotification");
               }
               return;
             }
@@ -106,10 +106,9 @@ function InitialAppLayout() {
         const { status: cameraStatus } =
           await Camera.getCameraPermissionsAsync();
         if (cameraStatus !== "granted") {
-          const isCameraPage =
-            segments[0] === "auth" && segments[1] === "enableCamera";
+          const isCameraPage = inAuthGroup && segments[2] === "enableCamera";
           if (!isCameraPage) {
-            router.replace("/auth/enableCamera");
+            router.replace("/screen/auth/enableCamera");
           }
           return;
         }
@@ -135,20 +134,28 @@ function InitialAppLayout() {
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
-          name="auth/signin"
+          name="screen/auth/signin"
           options={{ title: "Sign In", headerShown: false }}
         />
         <Stack.Screen
-          name="auth/enableLocation"
+          name="screen/auth/enableLocation"
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="auth/enableNotification"
+          name="screen/auth/enableNotification"
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="auth/enableCamera"
+          name="screen/auth/enableCamera"
           options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="screen/profile/profile_Information"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="modal"
+          options={{ presentation: "modal", title: "Setting" }}
         />
         {/* <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} /> */}
       </Stack>

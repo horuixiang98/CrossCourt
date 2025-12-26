@@ -1,5 +1,5 @@
 import { Colors } from "@/constants/theme";
-import { supabase } from "@/utils/supabase";
+import { supabase } from "@/src/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";

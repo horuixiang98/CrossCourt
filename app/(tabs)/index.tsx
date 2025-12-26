@@ -1,5 +1,7 @@
 import { Colors } from "@/constants/theme";
-import { useSession } from "@/providers/SessionProvider";
+import MiniApp from "@/src/components/indexPage/miniApp";
+import Search from "@/src/components/indexPage/search";
+import { useSession } from "@/src/providers/SessionProvider";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
@@ -11,8 +13,6 @@ import {
   View,
 } from "react-native";
 import CountryFlag from "react-native-country-flag";
-import MiniApp from "../indexPage/miniApp";
-import Search from "../indexPage/search";
 
 function HomeScreen() {
   const { session } = useSession();
@@ -104,7 +104,7 @@ function HomeScreen() {
         <Text style={styles.sectionTitle}>Training Materials</Text>
         <TouchableOpacity
           style={styles.moreButton}
-          onPress={() => router.push("/training/videos")}
+          onPress={() => router.push("/(tabs)/training")}
         >
           <Text style={styles.moreText}>See More</Text>
           <Feather
