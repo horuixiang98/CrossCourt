@@ -36,7 +36,7 @@ export default function Profile() {
       if (!session?.user) throw new Error("No user on the session!");
 
       const { data, error, status } = await supabase
-        .from("profiles")
+        .from("player_profile")
         .select(`username, avatar_url`)
         .eq("id", session?.user.id)
         .single();

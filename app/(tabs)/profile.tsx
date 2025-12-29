@@ -1,7 +1,9 @@
 import { Colors } from "@/constants/theme";
 import { useSession } from "@/src/providers/SessionProvider";
+import { getPlayerProfile } from "@/src/services/playerProfileService";
 import { supabase } from "@/src/utils/supabase";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   NativeScrollEvent,
@@ -14,8 +16,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useRouter } from "expo-router";
-
 export default function Profile() {
   const { session } = useSession();
   const [username, setUsername] = useState("User");
@@ -23,39 +23,29 @@ export default function Profile() {
   const router = useRouter();
 
   useEffect(() => {
-    if (session) getProfile();
+    if (session?.user?.id) fetchProfile();
   }, [session]);
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true);
+      if (!session?.user?.id) throw new Error("No user on the session!");
+
+      const data = await getPlayerProfile(session.user.id);
+
+      if (data?.nickname) {
+        setUsername(data.nickname);
+      }
+    } catch (error) {
+      console.error("Error fetching profile in tab:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     // Scroll-to-hide feature removed at user request
   };
-
-  async function getProfile() {
-    try {
-      setLoading(true);
-      if (!session?.user) throw new Error("No user on the session!");
-
-      const { data, error, status } = await supabase
-        .from("profiles")
-        .select(`username, avatar_url`)
-        .eq("id", session?.user.id)
-        .single();
-
-      if (error && status !== 406) {
-        throw error;
-      }
-
-      if (data) {
-        if (data.username) setUsername(data.username);
-      }
-    } catch (error) {
-      if (error instanceof Error) {
-        // Alert.alert(error.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const MenuItem = ({
     icon,
@@ -99,7 +89,10 @@ export default function Profile() {
             <Text style={styles.headerName}>{username}</Text>
             <Text style={styles.headerEmail}>{session?.user?.email}</Text>
           </View>
-          <TouchableOpacity style={styles.headerMenuButton}>
+          <TouchableOpacity
+            style={styles.headerMenuButton}
+            onPress={() => router.push("/screen/profile/setting")}
+          >
             <Ionicons
               name="ellipsis-vertical"
               size={24}
