@@ -2,8 +2,10 @@ import { Colors } from "@/constants/theme";
 import MiniApp from "@/src/components/indexPage/miniApp";
 import Search from "@/src/components/indexPage/search";
 import { useSession } from "@/src/providers/SessionProvider";
+import { getPlayerProfile } from "@/src/services/playerProfileService";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import {
   Image,
   ScrollView,
@@ -15,8 +17,19 @@ import {
 import CountryFlag from "react-native-country-flag";
 
 function HomeScreen() {
+  const [profile, setProfile] = useState<any>(null);
   const { session } = useSession();
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (session?.user?.id) {
+        const data = await getPlayerProfile(session.user.id);
+        setProfile(data);
+      }
+    };
+    fetchProfile();
+  }, [session]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -59,7 +72,7 @@ function HomeScreen() {
           <View>
             <Text style={styles.greetingText}>{getGreeting()},</Text>
             <View style={styles.nameRow}>
-              <Text style={styles.userName}>Ryanxavier Ho</Text>
+              <Text style={styles.userName}>{profile?.nickname}</Text>
               <CountryFlag isoCode="MY" size={18} style={styles.flag} />
             </View>
             <View style={styles.rankBadge}>
@@ -220,7 +233,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: Colors.light.primary + "15", // 15% opacity green
-    paddingHorizontal: 8,
+    paddingHorizontal: 0,
     paddingVertical: 4,
     borderRadius: 8,
     marginTop: 8,

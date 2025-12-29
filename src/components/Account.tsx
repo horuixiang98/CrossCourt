@@ -30,7 +30,7 @@ export default function Account({ session }: { session: Session | null }) {
       if (!session?.user) throw new Error("No user on the session!");
 
       const { data, error, status } = await supabase
-        .from("profiles")
+        .from("player_profile")
         .select(`username, website, avatar_url`)
         .eq("id", session?.user.id)
         .single();
@@ -73,7 +73,7 @@ export default function Account({ session }: { session: Session | null }) {
         updated_at: new Date(),
       };
 
-      const { error } = await supabase.from("profiles").upsert(updates);
+      const { error } = await supabase.from("player_profile").upsert(updates);
 
       if (error) {
         throw error;

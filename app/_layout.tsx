@@ -12,7 +12,7 @@ import * as ExpoLocation from "expo-location";
 import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import WelcomeScreen from "./welcome";
 
@@ -59,23 +59,17 @@ function InitialAppLayout() {
     if (isLoading || !isWelcomeFinished) return;
 
     const checkStatus = async () => {
-      const inAuthGroup = segments[0] === "screen" && segments[1] === "auth";
+      const segmentsArray = segments || [];
+      const inAuthGroup =
+        segmentsArray[0] === "screen" && segmentsArray[1] === "auth";
 
-      if (!session) {
-        if (!inAuthGroup) {
-          router.replace("/screen/auth/signin");
-        }
-        return;
-      }
-
-      // User is logged in, check permissions sequentially
       try {
         // 1. Check Location
         const { status: locationStatus } =
           await ExpoLocation.getForegroundPermissionsAsync();
         if (locationStatus !== "granted") {
           const isLocationPage =
-            inAuthGroup && segments[2] === "enableLocation";
+            inAuthGroup && segmentsArray[2] === "enableLocation";
           if (!isLocationPage) {
             router.replace("/screen/auth/enableLocation");
           }
@@ -86,12 +80,11 @@ function InitialAppLayout() {
         const isExpoGo = Constants.appOwnership === "expo";
         if (!isExpoGo) {
           try {
-            // Only import/use notifications if not in Expo Go to avoid the SDK 53 error
             const { status: notificationStatus } =
               await Notifications.getPermissionsAsync();
             if (notificationStatus !== "granted") {
               const isNotificationPage =
-                inAuthGroup && segments[2] === "enableNotification";
+                inAuthGroup && segmentsArray[2] === "enableNotification";
               if (!isNotificationPage) {
                 router.replace("/screen/auth/enableNotification");
               }
@@ -106,14 +99,24 @@ function InitialAppLayout() {
         const { status: cameraStatus } =
           await Camera.getCameraPermissionsAsync();
         if (cameraStatus !== "granted") {
-          const isCameraPage = inAuthGroup && segments[2] === "enableCamera";
+          const isCameraPage =
+            inAuthGroup && segmentsArray[2] === "enableCamera";
           if (!isCameraPage) {
             router.replace("/screen/auth/enableCamera");
           }
           return;
         }
 
-        // All permissions granted
+        // 4. Check Login session after permissions
+        if (!session) {
+          const isSignInPage = inAuthGroup && segmentsArray[2] === "signin";
+          if (!isSignInPage) {
+            router.replace("/screen/auth/signin");
+          }
+          return;
+        }
+
+        // All permissions granted and logged in
         if (inAuthGroup) {
           router.replace("/(tabs)");
         }
@@ -154,13 +157,10 @@ function InitialAppLayout() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Setting" }}
+          name="screen/profile/setting"
+          options={{ presentation: "modal", title: "Settings" }}
         />
-        {/* <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} /> */}
       </Stack>
-
-      {/* <StatusBar style="auto" /> */}
     </ThemeProvider>
   );
 }
