@@ -1,7 +1,16 @@
-import { Feather } from "@expo/vector-icons";
+import { Activity, Trophy, Users, Zap } from "lucide-react-native";
 
 export const icon = {
-    index: (props: any) => <Feather name={'home'} size={20} {... props}/>,
-    training: (props: any) => <Feather name={'loader'} size={20} {... props} />,
-    profile: (props: any) => <Feather name={'settings'} size={20} {... props}/>,
-}
+  index: (props: any) => (
+    <Zap size={22} strokeWidth={2} fill={props.color} {...props} />
+  ),
+  club: (props: any) => (
+    <Users size={22} strokeWidth={2} fill={props.color} {...props} />
+  ),
+  match: (props: any) => (
+    <Trophy size={22} strokeWidth={2} fill={props.color} {...props} />
+  ),
+  stats: (props: any) => (
+    <Activity size={22} strokeWidth={2} fill={props.color} {...props} />
+  ),
+};

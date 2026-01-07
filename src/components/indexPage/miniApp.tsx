@@ -1,5 +1,4 @@
-import { Colors } from "@/constants/theme";
-import { Feather } from "@expo/vector-icons";
+import { MoreHorizontal } from "lucide-react-native";
 import React from "react";
 import {
   Dimensions,
@@ -19,80 +18,40 @@ function MiniApp() {
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
-          gap: 5,
+          alignItems: "center",
+          marginBottom: 16,
         }}
       >
-        <Text style={styles.title}>Mini Applications</Text>
-        <Feather
-          name="more-horizontal"
-          size={18}
-          color="#222222b7"
-          style={{ marginTop: 5 }}
-        />
+        <Text style={styles.title}>MINI APPLICATIONS</Text>
+        <MoreHorizontal size={20} color="#64748b" />
       </View>
-      <ScrollView horizontal={true}>
+      <ScrollView horizontal={true} showsHorizontalScrollIndicator={false}>
         <View style={styles.BorderBackground}>
-          <Text
-            style={[
-              styles.NewBadge,
-              { fontSize: 10, fontWeight: "bold", alignSelf: "flex-start" },
-            ]}
-          >
-            New Feature
-          </Text>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              color: "#222222b7",
-              paddingVertical: 5,
-            }}
-          >
-            Scoreboard
-          </Text>
+          <View style={styles.badgeWrapper}>
+            <Text style={styles.NewBadge}>New Feature</Text>
+          </View>
+          <Text style={styles.cardTitle}>Scoreboard</Text>
           <Text style={styles.Subtitle}>
-            Track your match score and get instant insights on your performance.
+            Track match score and get instant insights on performance.
           </Text>
           <Image
             source={require("@/assets/images/scoreboard.png")}
             resizeMode="contain"
-            style={{
-              width: 100,
-              height: 100,
-              alignSelf: "flex-end",
-            }}
+            style={styles.cardImage}
           />
         </View>
         <View style={styles.BorderBackground}>
-          <Text
-            style={[
-              styles.RecommendedBadge,
-              { fontSize: 10, fontWeight: "bold", alignSelf: "flex-start" },
-            ]}
-          >
-            Recommended
-          </Text>
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: "bold",
-              color: "#222222b7",
-              paddingVertical: 5,
-            }}
-          >
-            Training
-          </Text>
+          <View style={styles.badgeWrapper}>
+            <Text style={styles.RecommendedBadge}>Recommended</Text>
+          </View>
+          <Text style={styles.cardTitle}>Training</Text>
           <Text style={styles.Subtitle}>
-            Improve skills and performance with personalized training modules.
+            Improve skills with personalized training modules.
           </Text>
           <Image
             source={require("@/assets/images/training.png")}
             resizeMode="contain"
-            style={{
-              width: 100,
-              height: 100,
-              alignSelf: "flex-end",
-            }}
+            style={styles.cardImage}
           />
         </View>
       </ScrollView>
@@ -103,40 +62,63 @@ function MiniApp() {
 export default MiniApp;
 
 const styles = StyleSheet.create({
-  container: {
-    // padding: 10,
-  },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#1c1c1cb7",
-    paddingBottom: 10,
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#64748b",
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
   },
   BorderBackground: {
-    marginRight: 10,
-    padding: 12,
-    borderRadius: 10,
+    marginRight: 12,
+    padding: 16,
+    borderRadius: 16,
     width: windowWidth / 2.2,
-    backgroundColor: Colors.light.lightgray2,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    borderWidth: 1,
+    borderColor: "rgba(30, 41, 59, 0.5)",
+  },
+  badgeWrapper: {
+    alignSelf: "flex-start",
+    marginBottom: 8,
   },
   NewBadge: {
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    borderRadius: 5,
-    backgroundColor: "#ffc3c35f",
-    textAlign: "center",
-    color: "#ff0000b7",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: "rgba(239, 68, 68, 0.15)",
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#ef4444",
+    textTransform: "uppercase",
   },
   RecommendedBadge: {
-    paddingHorizontal: 15,
-    paddingVertical: 5,
-    borderRadius: 5,
-    backgroundColor: "#c8eeff6e",
-    textAlign: "center",
-    color: "#205fffb7",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    backgroundColor: "rgba(59, 130, 246, 0.15)",
+    fontSize: 9,
+    fontWeight: "bold",
+    color: "#3b82f6",
+    textTransform: "uppercase",
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: "800",
+    color: "#f8fafc",
+    marginBottom: 4,
   },
   Subtitle: {
     fontSize: 10,
-    color: "#22222280",
+    color: "#64748b",
+    lineHeight: 14,
+    fontWeight: "500",
+  },
+  cardImage: {
+    width: 80,
+    height: 80,
+    alignSelf: "flex-end",
+    marginTop: 8,
+    opacity: 0.8,
   },
 });

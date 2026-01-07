@@ -1,11 +1,23 @@
-import { Colors } from "@/constants/theme";
 import { useSession } from "@/src/providers/SessionProvider";
 import { supabase } from "@/src/utils/supabase";
-import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import {
+  ArrowLeft,
+  Bell,
+  ChevronRight,
+  Globe,
+  HelpCircle,
+  Info,
+  Lock,
+  LogOut,
+  LucideIcon,
+  Moon,
+  Shield,
+  User,
+} from "lucide-react-native";
 import React, { useEffect, useState } from "react";
 import {
-  NativeScrollEvent,
-  NativeSyntheticEvent,
+  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,9 +26,9 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { useRouter } from "expo-router";
+const { width, height } = Dimensions.get("window");
 
-export default function Profile() {
+export default function SettingsScreen() {
   const { session } = useSession();
   const [username, setUsername] = useState("User");
   const [loading, setLoading] = useState(true);
@@ -26,10 +38,6 @@ export default function Profile() {
     if (session) getProfile();
   }, [session]);
 
-  const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-    // Scroll-to-hide feature removed at user request
-  };
-
   async function getProfile() {
     try {
       setLoading(true);
@@ -37,7 +45,7 @@ export default function Profile() {
 
       const { data, error, status } = await supabase
         .from("player_profile")
-        .select(`username, avatar_url`)
+        .select(`nickname, avatar_url`)
         .eq("id", session?.user.id)
         .single();
 
@@ -46,223 +54,272 @@ export default function Profile() {
       }
 
       if (data) {
-        if (data.username) setUsername(data.username);
+        if (data.nickname) setUsername(data.nickname);
       }
     } catch (error) {
-      if (error instanceof Error) {
-        // Alert.alert(error.message);
-      }
+      console.error("Error fetching profile in settings:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  const MenuItem = ({
-    icon,
+  const SettingItem = ({
+    Icon,
     title,
-    subtitle,
+    value,
     onPress,
+    color = "#64748b",
   }: {
-    icon: keyof typeof Ionicons.glyphMap;
+    Icon: LucideIcon;
     title: string;
-    subtitle: string;
+    value?: string;
     onPress?: () => void;
+    color?: string;
   }) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-      <View style={styles.menuIconContainer}>
-        <Ionicons name={icon} size={24} color={Colors.light.text} />
+      <View
+        style={[styles.menuIconContainer, { backgroundColor: `${color}15` }]}
+      >
+        <Icon size={18} color={color} />
       </View>
-      <View style={styles.menuTextContainer}>
-        <Text style={styles.menuTitle}>{title}</Text>
-        <Text style={styles.menuSubtitle}>{subtitle}</Text>
+      <Text style={styles.menuTitle}>{title}</Text>
+      <View style={styles.valueContainer}>
+        {value && <Text style={styles.menuValue}>{value}</Text>}
+        <ChevronRight size={16} color="#1e293b" />
       </View>
-      <Ionicons
-        name="chevron-forward"
-        size={20}
-        color={Colors.light.icon}
-        style={styles.menuArrow}
-      />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-      >
+    <View style={styles.mainContainer}>
+      <View style={styles.topGlow} />
+
+      <SafeAreaView style={{ flex: 1 }} edges={["top"]}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerInfo}>
-            <Text style={styles.headerName}>{username}</Text>
-            <Text style={styles.headerEmail}>{session?.user?.email}</Text>
-          </View>
-          <TouchableOpacity style={styles.headerMenuButton}>
-            <Ionicons
-              name="ellipsis-vertical"
-              size={24}
-              color={Colors.light.text}
-            />
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <ArrowLeft size={22} color="#f8fafc" />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>设置</Text>
+          <View style={{ width: 44 }} />
         </View>
 
-        {/* Account Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <MenuItem
-            icon="person-outline"
-            title="Profile information"
-            subtitle="Change number, email id"
-            onPress={() => router.push("/screen/profile/profile_Information")}
-          />
-          <MenuItem
-            icon="options-outline"
-            title="Preferences"
-            subtitle="Theme, travel preferences"
-          />
-          <MenuItem
-            icon="card-outline"
-            title="Payment methods"
-            subtitle="Saved cards, Paypal"
-          />
-          <MenuItem
-            icon="ticket-outline"
-            title="Coupons"
-            subtitle="All vPasses & vouchers"
-          />
-          <MenuItem
-            icon="notifications-outline"
-            title="Notifications"
-            subtitle="Push notifications"
-          />
-        </View>
-
-        {/* Help & Support Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Help & Support</Text>
-          <MenuItem
-            icon="lock-closed-outline"
-            title="Privacy policy"
-            subtitle="Security notifications"
-          />
-          <MenuItem
-            icon="document-text-outline"
-            title="Terms & Conditions"
-            subtitle="Cancellation policy"
-          />
-          <MenuItem
-            icon="help-circle-outline"
-            title="FAQ & Help"
-            subtitle="Get in touch with us"
-          />
-        </View>
-
-        {/* Sign Out Button (Added for functionality) */}
-        <TouchableOpacity
-          style={styles.signOutButton}
-          onPress={() => supabase.auth.signOut()}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.signOutText}>Sign Out</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+          <View style={styles.userInfoCard}>
+            <View style={styles.avatarPlaceholder}>
+              <User size={32} color="#10b981" />
+            </View>
+            <View>
+              <Text style={styles.userName}>{username}</Text>
+              <Text style={styles.userEmail}>{session?.user?.email}</Text>
+            </View>
+          </View>
+
+          {/* General Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>通用设置</Text>
+            <SettingItem
+              Icon={User}
+              title="个人资料"
+              onPress={() => router.push("/screen/profile/profile_Information")}
+              color="#10b981"
+            />
+            <SettingItem
+              Icon={Moon}
+              title="深色模式"
+              value="开启"
+              color="#3b82f6"
+            />
+            <SettingItem
+              Icon={Globe}
+              title="语言"
+              value="简体中文"
+              color="#f59e0b"
+            />
+            <SettingItem Icon={Bell} title="消息通知" color="#ec4899" />
+          </View>
+
+          {/* Privacy Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>隐私与安全</Text>
+            <SettingItem Icon={Lock} title="账号安全" color="#64748b" />
+            <SettingItem Icon={Shield} title="隐私设置" color="#64748b" />
+          </View>
+
+          {/* About Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>关于</Text>
+            <SettingItem
+              Icon={Info}
+              title="关于 CrossCourt"
+              value="v1.0.4"
+              color="#10b981"
+            />
+            <SettingItem Icon={HelpCircle} title="帮助中心" color="#64748b" />
+          </View>
+
+          {/* Sign Out */}
+          <TouchableOpacity
+            style={styles.signOutButton}
+            onPress={() => supabase.auth.signOut()}
+          >
+            <LogOut size={20} color="#ef4444" style={{ marginRight: 12 }} />
+            <Text style={styles.signOutText}>退出登录</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.footerText}>MADE WITH POWER BY JUSTHI TEAM</Text>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#050505",
   },
-  scrollContent: {
-    paddingBottom: 40,
+  topGlow: {
+    position: "absolute",
+    top: -height * 0.1,
+    right: -width * 0.2,
+    width: width * 0.8,
+    height: height * 0.3,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    borderRadius: 100,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 30,
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  headerInfo: {
-    flex: 1,
-  },
-  headerName: {
-    fontSize: 24,
+  headerTitle: {
+    fontSize: 18,
     fontWeight: "bold",
-    color: Colors.light.text,
+    color: "#f8fafc",
+  },
+  backButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(30, 41, 59, 0.5)",
+  },
+  scrollContent: {
+    paddingBottom: 40,
+    paddingHorizontal: 20,
+  },
+  userInfoCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.3)",
+    padding: 20,
+    borderRadius: 16,
+    marginTop: 20,
+    marginBottom: 32,
+    borderWidth: 1,
+    borderColor: "rgba(30, 41, 59, 0.5)",
+  },
+  avatarPlaceholder: {
+    width: 60,
+    height: 60,
+    borderRadius: 20,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 16,
+  },
+  userName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#f8fafc",
     marginBottom: 4,
   },
-  headerEmail: {
-    fontSize: 14,
-    color: Colors.light.icon,
-  },
-  headerMenuButton: {
-    padding: 8,
-    marginTop: -8,
-    marginRight: -8,
+  userEmail: {
+    fontSize: 13,
+    color: "#64748b",
+    fontWeight: "500",
   },
   section: {
-    marginBottom: 30,
+    marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: Colors.light.icon,
-    marginLeft: 24,
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#475569",
+    marginLeft: 8,
     marginBottom: 16,
+    textTransform: "uppercase",
+    letterSpacing: 2,
   },
   menuItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    backgroundColor: "rgba(15, 23, 42, 0.2)",
+    borderRadius: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(30, 41, 59, 0.2)",
   },
   menuIconContainer: {
-    width: 40,
-    alignItems: "flex-start",
-  },
-  menuTextContainer: {
-    flex: 1,
-    marginLeft: 4,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
   },
   menuTitle: {
-    fontSize: 14,
+    flex: 1,
+    fontSize: 15,
     fontWeight: "600",
-    color: Colors.light.text,
-    marginBottom: 4,
+    color: "#f8fafc",
   },
-  menuSubtitle: {
-    fontSize: 12,
-    color: Colors.light.icon,
+  valueContainer: {
+    flexDirection: "row",
+    alignItems: "center",
   },
-  menuArrow: {
-    opacity: 0.5,
+  menuValue: {
+    fontSize: 13,
+    color: "#64748b",
+    marginRight: 8,
+    fontWeight: "500",
   },
   signOutButton: {
-    marginHorizontal: 24,
-    marginTop: 10,
-    paddingVertical: 16,
+    marginTop: 8,
+    height: 56,
+    borderRadius: 16,
+    justifyContent: "center",
     alignItems: "center",
+    flexDirection: "row",
+    backgroundColor: "rgba(239, 68, 68, 0.05)",
     borderWidth: 1,
-    borderColor: "#ff4444",
-    borderRadius: 12,
+    borderColor: "rgba(239, 68, 68, 0.1)",
   },
   signOutText: {
-    color: "#ff4444",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  footer: {
-    padding: 20,
-    backgroundColor: Colors.light.background,
-    alignItems: "center",
+    color: "#ef4444",
+    fontSize: 15,
+    fontWeight: "bold",
   },
   footerText: {
-    fontSize: 12,
-    color: Colors.light.icon,
+    textAlign: "center",
+    marginTop: 40,
+    fontSize: 10,
+    color: "#1e293b",
+    fontWeight: "900",
+    letterSpacing: 2,
   },
 });

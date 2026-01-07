@@ -134,32 +134,19 @@ function InitialAppLayout() {
 
   return (
     <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="screen/auth/signin"
-          options={{ title: "Sign In", headerShown: false }}
-        />
-        <Stack.Screen
-          name="screen/auth/enableLocation"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="screen/auth/enableNotification"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="screen/auth/enableCamera"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="screen/profile/profile_Information"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="screen/profile/setting"
-          options={{ presentation: "modal", title: "Settings" }}
-        />
+      <Stack
+        screenOptions={{
+          // This hides the header for ALL screens in this stack
+          headerShown: false,
+        }}
+      >
+        {/* <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="screen/auth/signin" />
+        <Stack.Screen name="screen/auth/enableLocation" />
+        <Stack.Screen name="screen/auth/enableNotification" />
+        <Stack.Screen name="screen/auth/enableCamera" />
+        <Stack.Screen name="screen/profile/profile_Information" />
+        <Stack.Screen name="screen/profile/setting" /> */}
       </Stack>
     </ThemeProvider>
   );

@@ -1,40 +1,16 @@
 import { Colors } from "@/constants/theme";
 import { useTabBar } from "@/src/providers/TabBarProvider";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
-import React, { useEffect, useState } from "react";
-import { LayoutChangeEvent, StyleSheet, View } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from "react-native-reanimated";
+import { Plus } from "lucide-react-native";
+import React from "react";
+import { Platform, StyleSheet, TouchableOpacity, View } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import TabBarButton from "./TabBarButton";
 
 export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { tabBarTranslateY } = useTabBar();
-  const [dimensions, setDimensions] = useState({ height: 0, width: 0 });
-
-  const buttonWidth = dimensions.width / state.routes.length;
-
-  const onTabbarLayout = (e: LayoutChangeEvent) => {
-    setDimensions({
-      height: e.nativeEvent.layout.height,
-      width: e.nativeEvent.layout.width,
-    });
-  };
-
-  const tabPositionX = useSharedValue(0);
-
-  useEffect(() => {
-    if (dimensions.width > 0) {
-      tabPositionX.value = withSpring(state.index * buttonWidth, {
-        damping: 20,
-        stiffness: 90,
-      });
-    }
-  }, [state.index, dimensions.width, buttonWidth]);
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -42,39 +18,19 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     };
   });
 
-  // Indicator style - a subtle line at the top or a small dot?
-  // Let's go with a small indicator bar at the top of the tab bar.
-  const indicatorStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ translateX: tabPositionX.value + (buttonWidth - 40) / 2 }],
-    };
-  });
-
   return (
     <Animated.View
-      onLayout={onTabbarLayout}
       style={[
-        styles.tabbar,
+        styles.tabBarContainer,
         containerAnimatedStyle,
         {
-          paddingBottom: insets.bottom + 10,
-          height: 60 + insets.bottom,
+          paddingBottom: Platform.OS === "ios" && insets.bottom > 0 ? 0 : 0, // Snippet handles height explicitly, but we need to respect safe area somewhat or just float above it.
+          // The snippet says bottom: 30px.
+          bottom: insets.bottom + 10,
         },
       ]}
     >
-      {/* Animated Indicator line at the top */}
-      <Animated.View
-        style={[
-          styles.indicator,
-          indicatorStyle,
-          {
-            width: 40,
-            backgroundColor: Colors.light.primary,
-          },
-        ]}
-      />
-
-      <View style={styles.tabItemsContainer}>
+      <View style={styles.contentContainer}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const label =
@@ -87,10 +43,6 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           const isFocused = state.index === index;
 
           const onPress = () => {
-            tabPositionX.value = withSpring(index * buttonWidth, {
-              damping: 20,
-              stiffness: 90,
-            });
             const event = navigation.emit({
               type: "tabPress",
               target: route.key,
@@ -110,45 +62,93 @@ export function TabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           };
 
           return (
-            <TabBarButton
-              key={route.name}
-              onPress={onPress}
-              onLongPress={onLongPress}
-              isFocused={isFocused}
-              routerName={route.name}
-              label={label}
-            />
+            <React.Fragment key={route.name}>
+              <View style={styles.tabItem}>
+                <TabBarButton
+                  onPress={onPress}
+                  onLongPress={onLongPress}
+                  isFocused={isFocused}
+                  routerName={route.name}
+                  label={label}
+                />
+              </View>
+              {/* Add spacer after the second item (index 1) for the FAB */}
+              {index === 1 && <View style={styles.spacer} />}
+            </React.Fragment>
           );
         })}
+      </View>
+
+      {/* Floating Action Button */}
+      <View style={styles.fabContainer}>
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.8}
+          onPress={() => {
+            console.log("Create Pressed");
+          }}
+        >
+          <Plus size={28} color="#e0e0e0ff" strokeWidth={3} />
+        </TouchableOpacity>
       </View>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  tabbar: {
+  tabBarContainer: {
     position: "absolute",
-    bottom: 0,
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(15, 15, 15, 0.95)",
+    borderRadius: 35,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
+    elevation: 20,
+    justifyContent: "center",
+    height: 70, // Fixed height from snippet
+  },
+  contentContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "100%",
+    paddingHorizontal: 10,
+  },
+  tabItem: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100%",
+  },
+  spacer: {
+    width: 65, // Match FAB container width
+  },
+  fabContainer: {
+    position: "absolute",
+    top: -35, // Move vertically up to float
     left: 0,
     right: 0,
-    backgroundColor: "white",
-    borderTopWidth: 1,
-    borderTopColor: "#f0f0f0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 10,
   },
-  tabItemsContainer: {
-    flexDirection: "row",
-    height: 60,
-    width: "100%",
-  },
-  indicator: {
-    position: "absolute",
-    top: 0,
-    height: 3,
-    borderRadius: 2,
+  fab: {
+    width: 55,
+    height: 55,
+    borderRadius: 18,
+    backgroundColor: Colors.light.primaryGreen,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: Colors.light.primaryGreen, // Green shadow
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.5,
+    shadowRadius: 18,
+    // borderWidth: 2,
+    // borderColor: "#3d3d3dff", // White border
   },
 });

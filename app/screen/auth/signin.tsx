@@ -1,19 +1,13 @@
-import { Colors } from "@/constants/theme";
 import { supabase } from "@/src/utils/supabase";
-import { Ionicons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Constants from "expo-constants";
-// Google Sign-In - Commented out for Expo Go compatibility
-// Uncomment when using a development build
-// import {
-//   GoogleSignin,
-//   isSuccessResponse,
-//   statusCodes,
-// } from "@react-native-google-signin/google-signin";
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   AppState,
+  Dimensions,
   Image,
   StyleSheet,
   Text,
@@ -23,6 +17,8 @@ import {
   View,
 } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // Tells Supabase Auth to continuously refresh the session automatically if
 // the app is in the foreground.
@@ -72,258 +68,258 @@ export default function SignIn() {
     setLoading(false);
   }
 
-  // Google Sign-In - Commented out for Expo Go compatibility
-  // React.useEffect(() => {
-  //   GoogleSignin.configure({
-  //     webClientId:
-  //       process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
-  //       "YOUR_CLIENT_ID_FROM_GOOGLE_CONSOLE",
-  //   });
-  // }, []);
-
   async function performGoogleSignIn() {
-    // Temporarily disabled for Expo Go
     if (isExpoGo) {
       Alert.alert(
         "Google Sign-In Unavailable",
-        "Google Sign-In requires a development build. Please use email/password login in Expo Go, or create a development build to use Google Sign-In.",
+        "Google Sign-In requires a development build. Please use email/password login in Expo Go.",
         [{ text: "OK" }]
       );
       return;
     }
-
-    // Native Google Sign-In code (uncomment when using development build)
-    // try {
-    //   setLoading(true);
-    //   await GoogleSignin.hasPlayServices();
-    //   const response = await GoogleSignin.signIn();
-    //   if (isSuccessResponse(response)) {
-    //     if (response.data.idToken) {
-    //       const { data, error } = await supabase.auth.signInWithIdToken({
-    //         provider: "google",
-    //         token: response.data.idToken,
-    //       });
-    //       if (error) throw error;
-    //     } else {
-    //       throw new Error("No ID token present in response");
-    //     }
-    //   }
-    // } catch (error: any) {
-    //   if (error.code === statusCodes.IN_PROGRESS) {
-    //     // operation in progress
-    //   } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-    //     Alert.alert("Google Play Services not available or outdated");
-    //   } else {
-    //     Alert.alert("Google Sign-In Error", error.message);
-    //   }
-    // } finally {
-    //   setLoading(false);
-    // }
   }
 
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={{ flexGrow: 1 }}
-      keyboardShouldPersistTaps="handled"
-      enableOnAndroid={true}
-      extraScrollHeight={100}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.headerContainer}>
-        <Image
-          style={{ width: "100%", height: height * 0.35 }}
-          source={require("@/assets/images/login-screen.png")}
-          resizeMode="cover"
-        />
-        <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>
-            {isSignUp ? "Create Account" : "Welcome Back"}
-          </Text>
-          <Text style={styles.headerSubtitle}>
-            {isSignUp
-              ? "Sign up to get started"
-              : "Sign in to continue your journey"}
-          </Text>
-        </View>
-      </View>
+    <View style={styles.mainContainer}>
+      <View style={styles.topGlow} />
+      <View style={styles.bottomGlow} />
 
-      <View style={styles.formContainer}>
-        {/* Email Input */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Email Address</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons
-              name="mail-outline"
-              size={20}
-              color={Colors.light.icon}
-              style={styles.inputIcon}
+      <KeyboardAwareScrollView
+        style={styles.container}
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
+        enableOnAndroid={true}
+        extraScrollHeight={100}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerContainer}>
+          <View style={styles.imageWrapper}>
+            <Image
+              style={styles.headerImage}
+              source={require("@/assets/images/login-screen.png")}
+              resizeMode="cover"
             />
-            <TextInput
-              style={styles.input}
-              onChangeText={setEmail}
-              value={email}
-              placeholder="name@example.com"
-              autoCapitalize="none"
-              placeholderTextColor="#A0A0A0"
-              keyboardType="email-address"
-            />
+            <View style={styles.imageOverlay} />
+          </View>
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>
+              {isSignUp ? "创建账号" : "欢迎回来"}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {isSignUp ? "开启你的羽球竞技之旅" : "继续你的卓越之路"}
+            </Text>
           </View>
         </View>
 
-        {/* Password Input */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrapper}>
-            <Ionicons
-              name="lock-closed-outline"
-              size={20}
-              color={Colors.light.icon}
-              style={styles.inputIcon}
-            />
-            <TextInput
-              style={styles.input}
-              onChangeText={setPassword}
-              value={password}
-              secureTextEntry={hidePass}
-              placeholder="Enter your password"
-              autoCapitalize="none"
-              placeholderTextColor="#A0A0A0"
-            />
-            <TouchableOpacity onPress={() => setHidePass(!hidePass)}>
-              <Ionicons
-                name={hidePass ? "eye-off-outline" : "eye-outline"}
-                size={20}
-                color={Colors.light.icon}
+        <View style={styles.formContainer}>
+          {/* Email Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>邮箱地址</Text>
+            <View style={styles.inputWrapper}>
+              <Mail size={18} color="#64748b" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                onChangeText={setEmail}
+                value={email}
+                placeholder="name@example.com"
+                autoCapitalize="none"
+                placeholderTextColor="#475569"
+                keyboardType="email-address"
               />
+            </View>
+          </View>
+
+          {/* Password Input */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>登录密码</Text>
+            <View style={styles.inputWrapper}>
+              <Lock size={18} color="#64748b" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                onChangeText={setPassword}
+                value={password}
+                secureTextEntry={hidePass}
+                placeholder="请输入密码"
+                autoCapitalize="none"
+                placeholderTextColor="#475569"
+              />
+              <TouchableOpacity onPress={() => setHidePass(!hidePass)}>
+                {hidePass ? (
+                  <EyeOff size={18} color="#64748b" />
+                ) : (
+                  <Eye size={18} color="#64748b" />
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[
+                styles.button,
+                styles.primaryButton,
+                loading && styles.buttonDisabled,
+              ]}
+              onPress={isSignUp ? signUpWithEmail : signInWithEmail}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#000" />
+              ) : (
+                <>
+                  <Text style={styles.primaryButtonText}>
+                    {isSignUp ? "确认注册" : "立即登录"}
+                  </Text>
+                  <ArrowRight
+                    size={18}
+                    color="#000"
+                    style={{ marginLeft: 8 }}
+                  />
+                </>
+              )}
+            </TouchableOpacity>
+
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>或通过以下方式</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, styles.googleButton]}
+              onPress={performGoogleSignIn}
+              disabled={loading}
+            >
+              <MaterialCommunityIcons
+                name="google"
+                size={20}
+                color="#f8fafc"
+                style={styles.googleIcon}
+              />
+              <Text style={styles.googleButtonText}>使用 Google 账号</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Toggle Sign In / Sign Up */}
+          <View style={styles.footerContainer}>
+            <Text style={styles.footerText}>
+              {isSignUp ? "已有账号?" : "还没有账号?"}
+            </Text>
+            <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
+              <Text style={styles.footerLink}>
+                {isSignUp ? " 返回登录" : " 立即注册"}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
-
-        {/* Action Buttons */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.button,
-              styles.primaryButton,
-              loading && styles.buttonDisabled,
-            ]}
-            onPress={isSignUp ? signUpWithEmail : signInWithEmail}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.primaryButtonText}>
-                {isSignUp ? "Sign Up" : "Sign In"}
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <View style={styles.dividerContainer}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or continue with</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <TouchableOpacity
-            style={[styles.button, styles.googleButton]}
-            onPress={performGoogleSignIn}
-            disabled={loading}
-          >
-            <Ionicons
-              name="logo-google"
-              size={20}
-              color="#000"
-              style={styles.googleIcon}
-            />
-            <Text style={styles.googleButtonText}>Google</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Toggle Sign In / Sign Up */}
-        <View style={styles.footerContainer}>
-          <Text style={styles.footerText}>
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}
-          </Text>
-          <TouchableOpacity onPress={() => setIsSignUp(!isSignUp)}>
-            <Text style={styles.footerLink}>
-              {isSignUp ? " Sign In" : " Sign Up"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </KeyboardAwareScrollView>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "#050505",
+  },
   container: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+  },
+  topGlow: {
+    position: "absolute",
+    top: -SCREEN_HEIGHT * 0.1,
+    right: -SCREEN_WIDTH * 0.2,
+    width: SCREEN_WIDTH * 0.8,
+    height: SCREEN_HEIGHT * 0.3,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderRadius: 80,
+  },
+  bottomGlow: {
+    position: "absolute",
+    bottom: -SCREEN_HEIGHT * 0.1,
+    left: -SCREEN_WIDTH * 0.2,
+    width: SCREEN_WIDTH * 0.8,
+    height: SCREEN_HEIGHT * 0.3,
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    borderRadius: 80,
   },
   headerContainer: {
     alignItems: "center",
-    marginTop: 20,
-    marginBottom: 20,
+  },
+  imageWrapper: {
+    width: "100%",
+    height: SCREEN_HEIGHT * 0.35,
+    position: "relative",
+  },
+  headerImage: {
+    width: "100%",
+    height: "100%",
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(5, 5, 5, 0.4)",
   },
   headerTextContainer: {
     width: "100%",
     paddingHorizontal: 24,
-    marginTop: 20,
+    marginTop: -40,
+    zIndex: 10,
   },
   headerTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: Colors.light.text,
+    fontSize: 32,
+    fontWeight: "900",
+    color: "#f8fafc",
     marginBottom: 8,
-    letterSpacing: -0.5,
+    letterSpacing: -1,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: Colors.light.icon,
-    fontWeight: "500",
+    color: "#64748b",
+    fontWeight: "600",
+    letterSpacing: 0.5,
   },
   formContainer: {
     paddingHorizontal: 24,
-    gap: 16,
+    gap: 20,
+    paddingTop: 32,
     paddingBottom: 40,
   },
   inputGroup: {
-    gap: 6,
+    gap: 8,
   },
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: Colors.light.text,
+    color: "#94a3b8",
     marginLeft: 4,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#F5F5F5",
-    borderRadius: 12,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    borderRadius: 16,
     paddingHorizontal: 16,
-    height: 48,
+    height: 56,
     borderWidth: 1,
-    borderColor: "transparent",
+    borderColor: "rgba(30, 41, 59, 0.5)",
   },
   inputIcon: {
     marginRight: 12,
   },
   input: {
     flex: 1,
-    fontSize: 14,
-    color: Colors.light.text,
+    fontSize: 15,
+    color: "#f8fafc",
     fontWeight: "500",
   },
   buttonContainer: {
-    gap: 12,
+    gap: 16,
     marginTop: 10,
   },
   button: {
-    height: 48,
-    borderRadius: 12,
+    height: 56,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
@@ -332,64 +328,62 @@ const styles = StyleSheet.create({
     opacity: 0.7,
   },
   primaryButton: {
-    backgroundColor: Colors.light.primary,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    backgroundColor: "#10b981",
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 15,
+    elevation: 10,
   },
   primaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+    color: "#050505",
+    fontSize: 17,
+    fontWeight: "900",
   },
   googleButton: {
-    backgroundColor: "#fff",
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
     borderWidth: 1,
-    borderColor: "#E0E0E0",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: "rgba(30, 41, 59, 0.8)",
   },
   googleIcon: {
-    marginRight: 10,
+    marginRight: 12,
   },
   googleButtonText: {
-    color: "#000",
-    fontSize: 14,
-    fontWeight: "600",
+    color: "#f8fafc",
+    fontSize: 15,
+    fontWeight: "bold",
   },
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: 12,
   },
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "#E0E0E0",
+    backgroundColor: "rgba(30, 41, 59, 0.5)",
   },
   dividerText: {
     marginHorizontal: 16,
-    color: "#999",
+    color: "#475569",
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
   footerContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginTop: 10,
+    marginTop: 20,
   },
   footerText: {
-    color: "#666",
+    color: "#64748b",
     fontSize: 14,
+    fontWeight: "500",
   },
   footerLink: {
-    color: Colors.light.primary,
+    color: "#10b981",
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "900",
   },
 });

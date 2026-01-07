@@ -1,7 +1,7 @@
-import { Colors } from "@/constants/theme";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
+import { Trophy, Users } from "lucide-react-native";
 import { useEffect } from "react";
 import { Dimensions, StyleSheet, Text, View } from "react-native";
 import Animated, {
@@ -18,6 +18,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 const { width, height } = Dimensions.get("window");
+
+// Create an animated version of LinearGradient to support animated styles
+const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 export default function WelcomeScreen() {
   const router = useRouter();
@@ -37,16 +40,16 @@ export default function WelcomeScreen() {
 
   useEffect(() => {
     // Logo entrance with bounce
-    logoScale.value = withSpring(1, { damping: 8, stiffness: 100 });
-    logoOpacity.value = withTiming(1, { duration: 800 });
+    logoScale.value = withSpring(1, { damping: 10, stiffness: 100 });
+    logoOpacity.value = withTiming(1, { duration: 1000 });
 
-    // Main shuttlecock animation - falling and rotating
+    // Main shuttlecock animation
     shuttlecockY.value = withSequence(
       withTiming(0, { duration: 600, easing: Easing.out(Easing.cubic) }),
       withRepeat(
         withSequence(
-          withTiming(-15, { duration: 500, easing: Easing.out(Easing.quad) }),
-          withTiming(0, { duration: 500, easing: Easing.in(Easing.quad) })
+          withTiming(-15, { duration: 800, easing: Easing.out(Easing.quad) }),
+          withTiming(0, { duration: 800, easing: Easing.in(Easing.quad) })
         ),
         -1,
         true
@@ -55,28 +58,28 @@ export default function WelcomeScreen() {
 
     shuttlecockRotate.value = withRepeat(
       withSequence(
-        withTiming(-5, { duration: 500 }),
-        withTiming(5, { duration: 1000 }),
-        withTiming(0, { duration: 500 })
+        withTiming(-5, { duration: 1000 }),
+        withTiming(5, { duration: 2000 }),
+        withTiming(0, { duration: 1000 })
       ),
       -1,
       true
     );
 
     // Text entrance
-    textOpacity.value = withDelay(400, withTiming(1, { duration: 1000 }));
+    textOpacity.value = withDelay(600, withTiming(1, { duration: 1200 }));
 
     // Progress bar animation
     progressWidth.value = withTiming(100, {
-      duration: 4800,
+      duration: 5000,
       easing: Easing.linear,
     });
 
     // Floating shuttlecocks
     shuttle1Y.value = withRepeat(
       withSequence(
-        withTiming(-20, { duration: 2000 }),
-        withTiming(0, { duration: 2000 })
+        withTiming(-20, { duration: 2500 }),
+        withTiming(0, { duration: 2500 })
       ),
       -1,
       true
@@ -86,8 +89,8 @@ export default function WelcomeScreen() {
       700,
       withRepeat(
         withSequence(
-          withTiming(-25, { duration: 2500 }),
-          withTiming(0, { duration: 2500 })
+          withTiming(-30, { duration: 3000 }),
+          withTiming(0, { duration: 3000 })
         ),
         -1,
         true
@@ -98,19 +101,13 @@ export default function WelcomeScreen() {
       1400,
       withRepeat(
         withSequence(
-          withTiming(-18, { duration: 1800 }),
-          withTiming(0, { duration: 1800 })
+          withTiming(-25, { duration: 2200 }),
+          withTiming(0, { duration: 2200 })
         ),
         -1,
         true
       )
     );
-
-    const timer = setTimeout(() => {
-      // No-op, _layout.tsx will switch from WelcomeScreen to Stack
-    }, 5000);
-
-    return () => clearTimeout(timer);
   }, []);
 
   const logoStyle = useAnimatedStyle(() => ({
@@ -148,104 +145,109 @@ export default function WelcomeScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={[
-          "#0a4d00",
-          Colors.light.primary || "#136700",
-          Colors.light.darkgreen || "#0c3f00",
-        ]}
-        locations={[0, 0.5, 1]}
+        colors={["#050505", "#0a0a0a", "#050505"]}
         style={StyleSheet.absoluteFill}
       />
 
-      {/* Decorative background elements - Court lines inspired */}
+      {/* Decorative glows */}
+      <View style={styles.topGlow} />
+      <View style={styles.bottomGlow} />
+
+      {/* Court inspired deco */}
       <View style={styles.courtLine1} />
       <View style={styles.courtLine2} />
-      <View style={styles.decoCircle1} />
-      <View style={styles.decoCircle2} />
 
       {/* Floating shuttlecocks */}
       <Animated.View style={[styles.floatingShuttle1, shuttle1Style]}>
         <MaterialCommunityIcons
           name="badminton"
           size={24}
-          color="rgba(255, 255, 255, 0.15)"
+          color="#10b981"
+          style={{ opacity: 0.1 }}
         />
       </Animated.View>
       <Animated.View style={[styles.floatingShuttle2, shuttle2Style]}>
         <MaterialCommunityIcons
           name="badminton"
           size={32}
-          color="rgba(255, 255, 255, 0.1)"
+          color="#3b82f6"
+          style={{ opacity: 0.08 }}
         />
       </Animated.View>
       <Animated.View style={[styles.floatingShuttle3, shuttle3Style]}>
         <MaterialCommunityIcons
           name="badminton"
           size={20}
-          color="rgba(255, 255, 255, 0.12)"
+          color="#10b981"
+          style={{ opacity: 0.12 }}
         />
       </Animated.View>
 
       <View style={styles.content}>
         <Animated.View style={[styles.logoContainer, logoStyle]}>
-          {/* Glowing circle background */}
           <View style={styles.glowOuter} />
           <View style={styles.glowMiddle} />
 
           <View style={styles.iconCircle}>
-            <Animated.View style={shuttlecockStyle}>
-              <MaterialCommunityIcons name="badminton" size={90} color="#fff" />
-            </Animated.View>
+            <LinearGradient
+              colors={["#10b981", "#059669"]}
+              style={styles.iconGradient}
+            >
+              <Animated.View style={shuttlecockStyle}>
+                <MaterialCommunityIcons
+                  name="badminton"
+                  size={80}
+                  color="#050505"
+                />
+              </Animated.View>
+            </LinearGradient>
           </View>
 
           <Animated.View style={[styles.textContainer, textStyle]}>
             <Text style={styles.appName}>CrossCourt</Text>
             <View style={styles.taglineContainer}>
               <View style={styles.dividerLine} />
-              <Text style={styles.tagline}>羽毛球卓越</Text>
+              <Text style={styles.tagline}>PRECISION & PASSION</Text>
               <View style={styles.dividerLine} />
             </View>
-            <Text style={styles.subtitle}>扣杀 · 连接 · 竞技</Text>
+            <Text style={styles.subtitle}>连接球友 · 掌控竞技</Text>
           </Animated.View>
         </Animated.View>
 
         <Animated.View entering={FadeIn.delay(1200)} style={styles.footer}>
           <View style={styles.loaderBar}>
-            <Animated.View style={[styles.loaderProgress, progressStyle]} />
+            <AnimatedLinearGradient
+              colors={["#10b981", "#3b82f6"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.loaderProgress, progressStyle]}
+            />
           </View>
-          <Text style={styles.loadingText}>正在准备您的数据...</Text>
+          <Text style={styles.loadingText}>INITIALIZING CHAMPIONSHIP DATA</Text>
         </Animated.View>
 
-        {/* Feature highlights */}
+        {/* Feature Highlights */}
         <Animated.View
-          entering={FadeInUp.delay(800).springify()}
+          entering={FadeInUp.delay(1000).springify()}
           style={styles.featureRow}
         >
           <View style={styles.featureItem}>
             <MaterialCommunityIcons
-              name="map-marker"
-              size={16}
-              color="rgba(255, 255, 255, 0.7)"
+              name="lightning-bolt"
+              size={14}
+              color="#10b981"
             />
-            <Text style={styles.featureText}>寻找球场</Text>
+            <Text style={styles.featureText}>极速匹配</Text>
           </View>
           <View style={styles.featureDivider} />
           <View style={styles.featureItem}>
-            <MaterialCommunityIcons
-              name="account-group"
-              size={16}
-              color="rgba(255, 255, 255, 0.7)"
-            />
-            <Text style={styles.featureText}>加入球友</Text>
+            <Users size={14} color="#10b981" />
+            <Text style={styles.featureText}>公会社交</Text>
           </View>
           <View style={styles.featureDivider} />
           <View style={styles.featureItem}>
-            <MaterialCommunityIcons
-              name="trophy"
-              size={16}
-              color="rgba(255, 255, 255, 0.7)"
-            />
-            <Text style={styles.featureText}>追踪数据</Text>
+            <Trophy size={14} color="#10b981" />
+            <Text style={styles.featureText}>赛季排行</Text>
           </View>
         </Animated.View>
       </View>
@@ -256,7 +258,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#136700",
+    backgroundColor: "#050505",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -265,52 +267,73 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     zIndex: 10,
   },
+  topGlow: {
+    position: "absolute",
+    top: -height * 0.1,
+    right: -width * 0.1,
+    width: width * 0.8,
+    height: height * 0.3,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderRadius: 100,
+  },
+  bottomGlow: {
+    position: "absolute",
+    bottom: -height * 0.1,
+    left: -width * 0.2,
+    width: width * 0.8,
+    height: height * 0.3,
+    backgroundColor: "rgba(59, 130, 246, 0.05)",
+    borderRadius: 100,
+  },
   logoContainer: {
     alignItems: "center",
   },
   glowOuter: {
     position: "absolute",
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-    top: -40,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    backgroundColor: "rgba(16, 185, 129, 0.03)",
+    top: -60,
   },
   glowMiddle: {
     position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
-    top: -20,
+    width: 220,
+    height: 220,
+    borderRadius: 110,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
+    top: -30,
   },
   iconCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    overflow: "hidden",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 32,
-    borderWidth: 3,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    marginBottom: 40,
+    borderWidth: 2,
+    borderColor: "rgba(16, 185, 129, 0.3)",
+    elevation: 20,
+    shadowColor: "#10b981",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.5,
     shadowRadius: 20,
-    elevation: 10,
+  },
+  iconGradient: {
+    flex: 1,
+    width: "100%",
+    justifyContent: "center",
+    alignItems: "center",
   },
   textContainer: {
     alignItems: "center",
   },
   appName: {
-    fontSize: 52,
+    fontSize: 48,
     fontWeight: "900",
-    color: "#fff",
+    color: "#f8fafc",
     letterSpacing: -2,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 10,
   },
   taglineContainer: {
     flexDirection: "row",
@@ -319,136 +342,105 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   dividerLine: {
-    width: 30,
+    width: 24,
     height: 1,
-    backgroundColor: "rgba(255, 255, 255, 0.5)",
-    marginHorizontal: 12,
+    backgroundColor: "rgba(16, 185, 129, 0.5)",
+    marginHorizontal: 16,
   },
   tagline: {
-    fontSize: 13,
-    color: "rgba(255, 255, 255, 0.9)",
-    fontWeight: "800",
-    letterSpacing: 3,
+    fontSize: 10,
+    color: "#10b981",
+    fontWeight: "900",
+    letterSpacing: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: "rgba(255, 255, 255, 0.7)",
-    fontWeight: "500",
-    marginTop: 4,
-    letterSpacing: 0.5,
+    color: "#64748b",
+    fontWeight: "600",
+    marginTop: 8,
+    letterSpacing: 1,
   },
   footer: {
     position: "absolute",
-    bottom: -height * 0.22,
+    bottom: -height * 0.2,
     alignItems: "center",
     width: width * 0.7,
   },
   loaderBar: {
     width: "100%",
-    height: 4,
-    backgroundColor: "rgba(255, 255, 255, 0.25)",
+    height: 3,
+    backgroundColor: "rgba(30, 41, 59, 0.5)",
     borderRadius: 2,
     overflow: "hidden",
-    marginBottom: 16,
+    marginBottom: 20,
   },
   loaderProgress: {
     height: "100%",
-    backgroundColor: "#fff",
     borderRadius: 2,
-    shadowColor: "#fff",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 4,
   },
   loadingText: {
-    color: "rgba(255, 255, 255, 0.7)",
-    fontSize: 11,
-    fontWeight: "700",
-    textTransform: "uppercase",
-    letterSpacing: 2.5,
+    color: "#475569",
+    fontSize: 9,
+    fontWeight: "900",
+    letterSpacing: 2,
   },
   featureRow: {
     position: "absolute",
     bottom: -height * 0.32,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.1)",
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    paddingHorizontal: 24,
+    paddingVertical: 14,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.2)",
+    borderColor: "rgba(30, 41, 59, 0.5)",
   },
   featureItem: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 8,
   },
   featureText: {
-    color: "rgba(255, 255, 255, 0.8)",
+    color: "#94a3b8",
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "bold",
   },
   featureDivider: {
     width: 1,
-    height: 16,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    marginHorizontal: 12,
+    height: 12,
+    backgroundColor: "rgba(30, 41, 59, 0.8)",
+    marginHorizontal: 16,
   },
   courtLine1: {
     position: "absolute",
-    top: height * 0.2,
+    top: height * 0.25,
     left: 0,
     right: 0,
-    height: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    height: 1,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
   },
   courtLine2: {
     position: "absolute",
-    bottom: height * 0.2,
+    bottom: height * 0.25,
     left: 0,
     right: 0,
-    height: 2,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-  },
-  decoCircle1: {
-    position: "absolute",
-    top: -120,
-    right: -120,
-    width: 350,
-    height: 350,
-    borderRadius: 175,
-    backgroundColor: "rgba(255, 255, 255, 0.04)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.06)",
-  },
-  decoCircle2: {
-    position: "absolute",
-    bottom: -180,
-    left: -180,
-    width: 450,
-    height: 450,
-    borderRadius: 225,
-    backgroundColor: "rgba(0, 0, 0, 0.08)",
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.05)",
+    height: 1,
+    backgroundColor: "rgba(16, 185, 129, 0.05)",
   },
   floatingShuttle1: {
     position: "absolute",
     top: height * 0.15,
-    right: width * 0.1,
-    opacity: 0.6,
+    right: width * 0.12,
   },
   floatingShuttle2: {
     position: "absolute",
-    top: height * 0.25,
+    top: height * 0.28,
     left: width * 0.08,
-    opacity: 0.5,
   },
   floatingShuttle3: {
     position: "absolute",
-    bottom: height * 0.15,
-    right: width * 0.15,
-    opacity: 0.4,
+    bottom: height * 0.12,
+    right: width * 0.18,
   },
 });

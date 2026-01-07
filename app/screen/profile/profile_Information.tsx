@@ -1,16 +1,25 @@
-import { Colors } from "@/constants/theme";
 import { useSession } from "@/src/providers/SessionProvider";
 import {
   getPlayerProfile,
   updatePlayerProfile,
 } from "@/src/services/playerProfileService";
 import { supabase } from "@/src/utils/supabase";
-import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import {
+  ArrowLeft,
+  Calendar,
+  Camera,
+  Globe,
+  Hand,
+  LogOut,
+  Mail,
+  User,
+} from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
   ScrollView,
   StyleSheet,
   Text,
@@ -19,6 +28,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+const { width, height } = Dimensions.get("window");
 
 export default function ProfileInformation() {
   const { session } = useSession();
@@ -48,7 +59,7 @@ export default function ProfileInformation() {
       const data = await getPlayerProfile(session.user.id);
 
       if (data) {
-        setUsername(data.username || "");
+        // setUsername(data.username || ""); // Column doesn't exist
         setNickname(data.nickname || "");
         setWebsite(data.website || "");
         setBio(data.bio || "");
@@ -72,7 +83,7 @@ export default function ProfileInformation() {
       if (!session?.user?.id) throw new Error("No user on the session!");
 
       const { success, error } = await updatePlayerProfile(session.user.id, {
-        username,
+        // username, // Column doesn't exist
         nickname,
         website,
         bio,
@@ -98,23 +109,36 @@ export default function ProfileInformation() {
 
   if (loading) {
     return (
-      <View style={[styles.safeArea, styles.centered]}>
-        <ActivityIndicator size="large" color={Colors.light.primary} />
+      <View style={[styles.mainContainer, styles.centered]}>
+        <ActivityIndicator size="large" color="#10b981" />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+    <SafeAreaView style={styles.mainContainer} edges={["top"]}>
+      {/* Glow Decorations */}
+      <View style={styles.topGlow} />
+
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.light.text} />
+          <ArrowLeft size={24} color="#f8fafc" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile Information</Text>
-        <View style={{ width: 40 }} />
+        <Text style={styles.headerTitle}>个人信息</Text>
+        <TouchableOpacity
+          style={styles.saveHeaderButton}
+          onPress={handleUpdateProfile}
+          disabled={updating}
+        >
+          {updating ? (
+            <ActivityIndicator size="small" color="#10b981" />
+          ) : (
+            <Text style={styles.saveHeaderText}>保存</Text>
+          )}
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -122,230 +146,170 @@ export default function ProfileInformation() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.avatarSection}>
-          <View style={styles.avatarCircle}>
-            {avatarUrl ? (
-              <TextInput value={avatarUrl} style={{ display: "none" }} /> // Placeholder for future image logic
-            ) : (
-              <Ionicons name="person" size={50} color={Colors.light.icon} />
-            )}
-            <TouchableOpacity style={styles.editAvatarButton}>
-              <Ionicons name="camera" size={20} color="#fff" />
-            </TouchableOpacity>
+          <View style={styles.avatarWrapper}>
+            <View style={styles.avatarGlow} />
+            <View style={styles.avatarCircle}>
+              <User size={40} color="#64748b" />
+              <TouchableOpacity style={styles.editAvatarButton}>
+                <Camera size={16} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
-          <Text style={styles.avatarText}>Change Profile Photo</Text>
+          <Text style={styles.avatarText}>更换头像</Text>
         </View>
 
         <View style={styles.formContainer}>
-          <Text style={styles.sectionHeader}>PERSONAL INFO</Text>
+          <Text style={styles.sectionTitle}>基本资料</Text>
 
           {/* Email (Read-only) */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>邮箱地址</Text>
             <View style={[styles.inputWrapper, styles.inputDisabled]}>
-              <Ionicons
-                name="mail-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
+              <Mail size={18} color="#475569" style={styles.inputIcon} />
               <TextInput
-                style={[styles.input, { color: Colors.light.icon }]}
+                style={[styles.input, { color: "#475569" }]}
                 value={session?.user?.email}
                 editable={false}
               />
             </View>
           </View>
 
-          {/* Nickname (Full Name) */}
+          {/* Nickname */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>昵称</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons
-                name="person-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
+              <User size={18} color="#64748b" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={nickname}
                 onChangeText={setNickname}
-                placeholder="Enter your full name"
-                placeholderTextColor="#999"
+                placeholder="请输入昵称"
+                placeholderTextColor="#475569"
               />
             </View>
           </View>
 
-          {/* Username */}
+          {/* Username - Disabled as column doesn't exist in DB */}
+          {/* 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Username</Text>
+            <Text style={styles.label}>用户名</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons
-                name="at-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
+              <Text
+                style={[
+                  styles.inputIcon,
+                  { color: "#64748b", fontWeight: "bold" },
+                ]}
+              >
+                @
+              </Text>
               <TextInput
                 style={styles.input}
                 value={username}
                 onChangeText={setUsername}
-                placeholder="username"
+                placeholder="唯一用户名"
                 autoCapitalize="none"
-                placeholderTextColor="#999"
+                placeholderTextColor="#475569"
               />
             </View>
           </View>
+          */}
 
           {/* Website */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Website</Text>
+            <Text style={styles.label}>个人网站</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons
-                name="globe-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
+              <Globe size={18} color="#64748b" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={website}
                 onChangeText={setWebsite}
                 placeholder="yourwebsite.com"
                 autoCapitalize="none"
-                placeholderTextColor="#999"
+                placeholderTextColor="#475569"
               />
             </View>
           </View>
 
           {/* Bio */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Bio</Text>
+            <Text style={styles.label}>个性签名</Text>
             <View
               style={[
                 styles.inputWrapper,
-                { height: 100, alignItems: "flex-start", paddingTop: 12 },
+                { height: 100, alignItems: "flex-start", paddingTop: 14 },
               ]}
             >
-              <Ionicons
-                name="book-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={[styles.inputIcon, { marginTop: 2 }]}
-              />
               <TextInput
                 style={[styles.input, { height: "100%" }]}
                 value={bio}
                 onChangeText={setBio}
-                placeholder="Tell us about yourself..."
+                placeholder="向大家介绍一下你自己..."
                 multiline
                 numberOfLines={4}
-                placeholderTextColor="#999"
+                placeholderTextColor="#475569"
               />
             </View>
           </View>
 
-          <View style={[styles.sectionHeader, { marginTop: 20 }]}>
-            <Text style={styles.sectionHeaderText}>GAME INFO</Text>
-          </View>
+          <Text style={[styles.sectionTitle, { marginTop: 24 }]}>
+            进阶竞技信息
+          </Text>
 
           {/* Favorite Racket */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Favorite Racket</Text>
+            <Text style={styles.label}>常用球拍</Text>
             <View style={styles.inputWrapper}>
-              <Ionicons
-                name="fitness-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
+              <Hand size={18} color="#64748b" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 value={favoriteRacket}
                 onChangeText={setFavoriteRacket}
-                placeholder="e.g. Yonex Astrox 88D"
-                placeholderTextColor="#999"
+                placeholder="例: Yonex Astrox 88D"
+                placeholderTextColor="#475569"
               />
             </View>
           </View>
 
-          {/* Play Years */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Years of Play</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="calendar-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                value={playYears}
-                onChangeText={setPlayYears}
-                placeholder="e.g. 5"
-                keyboardType="numeric"
-                placeholderTextColor="#999"
-              />
+          <View style={styles.row}>
+            {/* Play Years */}
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>球龄 (年)</Text>
+              <View style={styles.inputWrapper}>
+                <Calendar size={18} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={playYears}
+                  onChangeText={setPlayYears}
+                  placeholder="2"
+                  keyboardType="numeric"
+                  placeholderTextColor="#475569"
+                />
+              </View>
             </View>
-          </View>
 
-          {/* Handedness */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Handedness</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons
-                name="hand-right-outline"
-                size={20}
-                color={Colors.light.icon}
-                style={styles.inputIcon}
-              />
-              <TextInput
-                style={styles.input}
-                value={handedness}
-                onChangeText={setHandedness}
-                placeholder="Right / Left"
-                placeholderTextColor="#999"
-              />
+            {/* Handedness */}
+            <View style={[styles.inputGroup, { flex: 1 }]}>
+              <Text style={styles.label}>持拍手</Text>
+              <View style={styles.inputWrapper}>
+                <Hand size={18} color="#64748b" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  value={handedness}
+                  onChangeText={setHandedness}
+                  placeholder="右手 / 左手"
+                  placeholderTextColor="#475569"
+                />
+              </View>
             </View>
           </View>
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
-              style={[
-                styles.button,
-                styles.primaryButton,
-                updating && styles.buttonDisabled,
-              ]}
-              onPress={handleUpdateProfile}
-              disabled={updating}
-            >
-              {updating ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Ionicons
-                    name="checkmark-circle-outline"
-                    size={20}
-                    color="#fff"
-                    style={{ marginRight: 8 }}
-                  />
-                  <Text style={styles.primaryButtonText}>Update Profile</Text>
-                </>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.button, styles.secondaryButton]}
+              style={[styles.button, styles.signOutButton]}
               onPress={() => supabase.auth.signOut()}
             >
-              <Ionicons
-                name="log-out-outline"
-                size={20}
-                color="#ff4444"
-                style={{ marginRight: 8 }}
-              />
-              <Text style={styles.secondaryButtonText}>Sign Out</Text>
+              <LogOut size={20} color="#ef4444" style={{ marginRight: 8 }} />
+              <Text style={styles.signOutButtonText}>注销登录</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -355,151 +319,169 @@ export default function ProfileInformation() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  mainContainer: {
     flex: 1,
-    backgroundColor: Colors.light.background,
+    backgroundColor: "#050505",
   },
   centered: {
     justifyContent: "center",
     alignItems: "center",
   },
+  topGlow: {
+    position: "absolute",
+    top: -height * 0.1,
+    left: -width * 0.2,
+    width: width * 0.8,
+    height: height * 0.2,
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    borderRadius: 100,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#f0f0f0",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
   },
   backButton: {
-    padding: 8,
-    width: 40,
+    width: 44,
+    height: 44,
+    backgroundColor: "rgba(15, 23, 42, 0.5)",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(30, 41, 59, 0.5)",
   },
   headerTitle: {
     fontSize: 18,
+    fontWeight: "900",
+    color: "#f8fafc",
+    letterSpacing: 0.5,
+  },
+  saveHeaderButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  saveHeaderText: {
+    color: "#10b981",
     fontWeight: "bold",
-    color: Colors.light.text,
+    fontSize: 16,
   },
   container: {
     padding: 24,
-    flexGrow: 1,
+    paddingBottom: 60,
   },
   avatarSection: {
     alignItems: "center",
-    marginBottom: 30,
+    marginBottom: 40,
+  },
+  avatarWrapper: {
+    position: "relative",
+  },
+  avatarGlow: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#10b981",
+    borderRadius: 40,
+    opacity: 0.1,
+    transform: [{ scale: 1.2 }],
   },
   avatarCircle: {
     width: 100,
     height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.light.lightgray || "#f5f5f5",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
-  },
-  editAvatarButton: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-    backgroundColor: Colors.light.primary,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    borderRadius: 24,
+    backgroundColor: "#1e293b",
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#fff",
+    borderColor: "rgba(16, 185, 129, 0.3)",
+    position: "relative",
+  },
+  editAvatarButton: {
+    position: "absolute",
+    bottom: -6,
+    right: -6,
+    backgroundColor: "#10b981",
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 3,
+    borderColor: "#050505",
   },
   avatarText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: Colors.light.primary,
-    fontWeight: "600",
+    marginTop: 16,
+    fontSize: 12,
+    color: "#10b981",
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 2,
   },
   formContainer: {
-    gap: 16,
+    gap: 20,
   },
-  sectionHeader: {
-    marginBottom: 8,
-  },
-  sectionHeaderText: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: Colors.light.icon,
-    letterSpacing: 1,
+  sectionTitle: {
+    fontSize: 11,
+    fontWeight: "900",
+    color: "#64748b",
+    letterSpacing: 2,
+    textTransform: "uppercase",
   },
   inputGroup: {
-    gap: 6,
+    gap: 8,
+  },
+  row: {
+    flexDirection: "row",
+    gap: 16,
   },
   label: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
-    color: Colors.light.text,
+    color: "#94a3b8",
     marginLeft: 4,
   },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: Colors.light.lightgray2 || "#f8f8f8",
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    height: 52,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    height: 56,
     borderWidth: 1,
-    borderColor: "#eef0ee",
+    borderColor: "rgba(30, 41, 59, 0.5)",
   },
   inputDisabled: {
-    backgroundColor: "#f0f0f0",
-    borderColor: "#d0d0d0",
-    opacity: 0.8,
+    opacity: 0.6,
+    backgroundColor: "rgba(0,0,0,0.2)",
   },
   inputIcon: {
-    marginRight: 10,
-    width: 20,
+    marginRight: 12,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: Colors.light.text,
+    fontSize: 15,
+    color: "#f8fafc",
+    fontWeight: "500",
   },
   buttonContainer: {
-    gap: 12,
-    marginTop: 32,
-    marginBottom: 20,
+    marginTop: 20,
   },
   button: {
-    height: 54,
-    borderRadius: 14,
+    height: 56,
+    borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     flexDirection: "row",
   },
-  buttonDisabled: {
-    opacity: 0.7,
+  signOutButton: {
+    backgroundColor: "rgba(239, 68, 68, 0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(239, 68, 68, 0.2)",
   },
-  primaryButton: {
-    backgroundColor: Colors.light.primary,
-    shadowColor: Colors.light.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  secondaryButton: {
-    backgroundColor: "transparent",
-    borderWidth: 1.5,
-    borderColor: "#ff4444",
-  },
-  secondaryButtonText: {
-    color: "#ff4444",
-    fontSize: 16,
+  signOutButtonText: {
+    color: "#ef4444",
+    fontSize: 15,
     fontWeight: "bold",
   },
 });

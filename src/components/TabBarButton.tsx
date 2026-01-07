@@ -50,15 +50,16 @@ const TabBarButton = ({
     >
       <Animated.View style={animatedIconStyle}>
         {icon[routerName as keyof typeof icon]({
-          color: isFocused ? Colors.light.primary : "#999",
-          size: 24,
+          color: isFocused ? Colors.light.primaryGreen : "#475569",
+          fill: isFocused ? Colors.light.primaryGreen : "transparent",
+          size: 22,
         })}
       </Animated.View>
 
       <Animated.Text
         style={[
           styles.label,
-          { color: isFocused ? Colors.light.primary : "#999" },
+          { color: isFocused ? Colors.light.primaryGreen : "#475569" },
           animatedTextStyle,
         ]}
       >
@@ -75,10 +76,13 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 2,
+    gap: 4,
   },
   label: {
-    fontSize: 11,
-    fontWeight: "500",
+    fontSize: 9,
+    fontWeight: "900",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+    marginTop: 2,
   },
 });

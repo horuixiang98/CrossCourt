@@ -19,6 +19,27 @@ export interface PlayerProfile {
   updated_at: string | null;
 }
 
+export interface PlayerStats {
+  id: string;
+  current_elo: number;
+  highest_elo: number;
+  rank_id: string | null;
+  season_wins: number;
+  season_losses: number;
+  technical_radar: {
+    power: number;
+    speed: number;
+    technique: number;
+    stamina: number;
+    strategy: number;
+  } | null;
+  rank?: {
+    rank_name: string;
+    min_elo: number;
+    max_elo: number;
+  } | null;
+}
+
 export const getPlayerProfile = async (userId: string): Promise<PlayerProfile | null> => {
   try {
     const { data, error, status } = await supabase
@@ -34,6 +55,29 @@ export const getPlayerProfile = async (userId: string): Promise<PlayerProfile | 
     return data as PlayerProfile;
   } catch (error) {
     console.error("Error fetching player profile:", error);
+    return null;
+  }
+};
+
+export const getPlayerStats = async (userId: string): Promise<PlayerStats | null> => {
+  try {
+    const { data, error, status } = await supabase
+      .from("player_stats")
+      .select(`
+        *,
+        rank:c_level_rank(*)
+      `)
+      .eq("id", userId)
+      .single();
+
+    if (error && status !== 406) {
+      // If no stats exist yet, return null rather than throwing
+      return null;
+    }
+
+    return data as any;
+  } catch (error) {
+    console.error("Error fetching player stats:", error);
     return null;
   }
 };

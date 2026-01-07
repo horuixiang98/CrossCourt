@@ -11,6 +11,7 @@ const tintColorDark = '#fff';
 export const Colors = {
   light: {
     primary: '#136700ff',
+    primaryGreen: '#10b981',
     lightgreen: '#2beb0060',
     darkgreen: '#0c3f00ff',
     text: '#11181C',
