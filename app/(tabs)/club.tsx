@@ -1,3 +1,5 @@
+import { useSession } from "@/src/providers/SessionProvider";
+import { ClubProfile, getJoinedClubProfile } from "@/src/services/clubService";
 import { useRouter } from "expo-router";
 import {
   ArrowUpRight,
@@ -9,9 +11,11 @@ import {
   Trophy,
   Users,
 } from "lucide-react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
+  Image,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -72,13 +76,49 @@ const RECOMMENDED_CLUBS = [
 ];
 
 export default function ClubScreen() {
+  const { session } = useSession();
   const router = useRouter();
+  const [clubs, setClubs] = useState<ClubProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const getClubProfile = async () => {
+    try {
+      setLoading(true);
+      const data = await getJoinedClubProfile(session?.user?.id || "");
+      setClubs(data);
+    } catch (error) {
+      console.error("Failed to fetch clubs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await getClubProfile();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    getClubProfile();
+  }, [session?.user?.id]);
+
   return (
     <View style={styles.mainContainer}>
       <ScrollView
         style={styles.container}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 120 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#10b981" // Match theme color
+            colors={["#10b981"]} // For Android
+            progressViewOffset={100}
+          />
+        }
       >
         {/* Glow Decorations */}
         <View style={styles.topGlow} />
@@ -90,7 +130,10 @@ export default function ClubScreen() {
             <TouchableOpacity style={styles.actionButton}>
               <Search size={20} color="#64748b" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionButton, styles.plusButton]}>
+            <TouchableOpacity
+              style={[styles.actionButton, styles.plusButton]}
+              onPress={() => router.push("/screen/club/create")}
+            >
               <Plus size={20} color="#fff" />
             </TouchableOpacity>
           </View>
@@ -117,61 +160,89 @@ export default function ClubScreen() {
         {/* Joined Clubs Section */}
         <View style={styles.section}>
           <Text style={styles.sectionHeader}>
-            已加入的公会 ({MY_CLUBS.length})
+            已加入的公会 ({clubs.length})
           </Text>
 
-          {MY_CLUBS.map((club) => (
-            <TouchableOpacity
-              key={club.id}
-              style={styles.clubCard}
-              onPress={() => router.push("/screen/club/details")}
-            >
-              {/* Background Accent */}
-              <View style={styles.cardAccent} />
+          {loading ? (
+            <ClubSkeleton />
+          ) : clubs.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                还没加入任何公会，去发现页看看吧
+              </Text>
+            </View>
+          ) : (
+            clubs.map((club) => (
+              <TouchableOpacity
+                key={club.id}
+                style={styles.clubCard}
+                onPress={() =>
+                  router.push({
+                    pathname: "/screen/club/details",
+                    params: { id: club.id },
+                  })
+                }
+              >
+                {/* Background Accent */}
+                <View style={styles.cardAccent} />
 
-              <View style={styles.clubCardContent}>
-                <View style={styles.clubInfoRow}>
-                  <View style={styles.logoContainer}>
-                    <Text style={styles.logoText}>{club.logo}</Text>
+                <View style={styles.clubCardContent}>
+                  <View style={styles.clubInfoRow}>
+                    <View style={styles.logoContainer}>
+                      {club.logo ? (
+                        <Image
+                          source={{ uri: club.logo }}
+                          style={styles.logoImage}
+                        />
+                      ) : (
+                        <Text style={styles.logoText}>🏸</Text>
+                      )}
+                    </View>
+                    <View style={styles.clubDetails}>
+                      <View style={styles.nameRow}>
+                        <Text style={styles.clubName} numberOfLines={1}>
+                          {club.name}
+                        </Text>
+                        {/* Logic for new announcement could be added later */}
+                      </View>
+                      <View style={styles.statsRow}>
+                        <View style={styles.roleBadge}>
+                          <Text style={styles.roleText}>
+                            {club.role || "成员"}
+                          </Text>
+                        </View>
+                        <View style={styles.statItem}>
+                          <Users size={10} color="#64748b" />
+                          <Text style={styles.statText}>
+                            {club.memberCount}
+                          </Text>
+                        </View>
+                        <View style={styles.statItem}>
+                          <Trophy size={10} color="#64748b" />
+                          <Text style={styles.statText}>No.{club.rank}</Text>
+                        </View>
+                      </View>
+                    </View>
                   </View>
-                  <View style={styles.clubDetails}>
-                    <View style={styles.nameRow}>
-                      <Text style={styles.clubName}>{club.name}</Text>
-                      {club.newAnnounce && <View style={styles.announceDot} />}
-                    </View>
-                    <View style={styles.statsRow}>
-                      <View style={styles.roleBadge}>
-                        <Text style={styles.roleText}>{club.role}</Text>
+
+                  <View style={styles.rightCol}>
+                    {club.activeAct > 0 ? (
+                      <View style={styles.activeBadge}>
+                        <Text style={styles.activeText}>
+                          {club.activeAct} 活动中
+                        </Text>
                       </View>
-                      <View style={styles.statItem}>
-                        <Users size={10} color="#64748b" />
-                        <Text style={styles.statText}>{club.memberCount}</Text>
+                    ) : (
+                      <View style={styles.inactiveBadge}>
+                        <Text style={styles.inactiveText}>暂无活动</Text>
                       </View>
-                      <View style={styles.statItem}>
-                        <Trophy size={10} color="#64748b" />
-                        <Text style={styles.statText}>{club.rank}</Text>
-                      </View>
-                    </View>
+                    )}
+                    <ChevronRight size={16} color="#1e293b" />
                   </View>
                 </View>
-
-                <View style={styles.rightCol}>
-                  {club.activeAct > 0 ? (
-                    <View style={styles.activeBadge}>
-                      <Text style={styles.activeText}>
-                        {club.activeAct} 活动中
-                      </Text>
-                    </View>
-                  ) : (
-                    <View style={styles.inactiveBadge}>
-                      <Text style={styles.inactiveText}>暂无活动</Text>
-                    </View>
-                  )}
-                  <ChevronRight size={16} color="#1e293b" />
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
         </View>
 
         {/* Discovery Section */}
@@ -321,7 +392,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(30, 41, 59, 0.5)",
-    marginBottom: 16,
+    marginBottom: 12,
     overflow: "hidden",
     position: "relative",
   },
@@ -468,7 +539,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(30, 41, 59, 0.5)",
     padding: 20,
-    marginRight: 16,
   },
   recommendLogo: {
     fontSize: 32,
@@ -521,4 +591,76 @@ const styles = StyleSheet.create({
     color: "#f8fafc",
     fontWeight: "bold",
   },
+  loadingContainer: {
+    gap: 1,
+  },
+  loadingText: {
+    color: "#64748b",
+    fontSize: 12,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: "center",
+    backgroundColor: "rgba(15, 23, 42, 0.2)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: "rgba(30, 41, 59, 0.5)",
+  },
+  emptyText: {
+    color: "#64748b",
+    fontSize: 12,
+  },
+  logoImage: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+  },
+  // Skeleton Styles
+  skeletonCard: {
+    height: 100,
+    backgroundColor: "rgba(15, 23, 42, 0.4)",
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "rgba(30, 41, 59, 0.5)",
+    marginBottom: 12,
+    overflow: "hidden",
+    padding: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 16,
+  },
+  skeletonLogo: {
+    width: 56,
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  skeletonContent: {
+    flex: 1,
+    gap: 8,
+  },
+  skeletonLine: {
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
 });
+
+const ClubSkeleton = () => {
+  return (
+    <View style={styles.loadingContainer}>
+      {[1, 2, 3].map((i) => (
+        <View key={i} style={styles.skeletonCard}>
+          <View style={styles.skeletonLogo} />
+          <View style={styles.skeletonContent}>
+            <View
+              style={[styles.skeletonLine, { width: "60%", marginBottom: 4 }]}
+            />
+            <View style={[styles.skeletonLine, { width: "40%" }]} />
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+};

@@ -3,11 +3,21 @@
     "preview": {
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://hgeeiagsozagtmzchann.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_wudcsxFIQosxd-no0JwNLw_AJtwc8JW",
+        "EXPO_PUBLIC_STADIA_API_KEY": "83282b60-f3b9-4572-8f2d-84d92702b616"
       }
     },
     "production": {
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://hgeeiagsozagtmzchann.supabase.co",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_wudcsxFIQosxd-no0JwNLw_AJtwc8JW",
+        "EXPO_PUBLIC_STADIA_API_KEY": "83282b60-f3b9-4572-8f2d-84d92702b616"
       }
     }
   }

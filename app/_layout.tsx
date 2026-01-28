@@ -7,9 +7,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { Camera } from "expo-camera";
-import Constants from "expo-constants";
 import * as ExpoLocation from "expo-location";
-import * as Notifications from "expo-notifications";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect, useState } from "react";
@@ -77,23 +75,23 @@ function InitialAppLayout() {
         }
 
         // 2. Check Notifications (Skip in Expo Go due to SDK 53 limitations)
-        const isExpoGo = Constants.appOwnership === "expo";
-        if (!isExpoGo) {
-          try {
-            const { status: notificationStatus } =
-              await Notifications.getPermissionsAsync();
-            if (notificationStatus !== "granted") {
-              const isNotificationPage =
-                inAuthGroup && segmentsArray[2] === "enableNotification";
-              if (!isNotificationPage) {
-                router.replace("/screen/auth/enableNotification");
-              }
-              return;
-            }
-          } catch (nError) {
-            console.warn("Notification permission check failed:", nError);
-          }
-        }
+        // const isExpoGo = Constants.appOwnership === "expo";
+        // if (!isExpoGo) {
+        //   try {
+        //     const { status: notificationStatus } =
+        //       await Notifications.getPermissionsAsync();
+        //     if (notificationStatus !== "granted") {
+        //       const isNotificationPage =
+        //         inAuthGroup && segmentsArray[2] === "enableNotification";
+        //       if (!isNotificationPage) {
+        //         router.replace("/screen/auth/enableNotification");
+        //       }
+        //       return;
+        //     }
+        //   } catch (nError) {
+        //     console.warn("Notification permission check failed:", nError);
+        //   }
+        // }
 
         // 3. Check Camera
         const { status: cameraStatus } =
@@ -133,7 +131,7 @@ function InitialAppLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === "light" ? DarkTheme : DefaultTheme}>
+    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack
         screenOptions={{
           // This hides the header for ALL screens in this stack

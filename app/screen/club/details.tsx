@@ -1,16 +1,29 @@
+import { useSession } from "@/src/providers/SessionProvider";
+import {
+  ClubActivity,
+  ClubMember,
+  ClubProfile,
+  getClubActivities,
+  getClubById,
+  getClubMemberbyClubId,
+} from "@/src/services/clubService";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   Award,
+  BellOff,
+  Bookmark,
   Check,
   ChevronLeft,
   ChevronRight,
   Clock,
   Crown,
+  Flame,
   MapPin,
   MessageSquare,
   MoreHorizontal,
   MoreVertical,
+  Plus,
   Search,
   ShieldCheck,
   UserMinus,
@@ -18,10 +31,13 @@ import {
   X,
   Zap,
 } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
+  Linking,
   ScrollView,
   StatusBar,
   StyleSheet,
@@ -147,8 +163,15 @@ const RECENT_HONORS = [
 const MEMBERS = FULL_MEMBERS; // For backwards compatibility with existing UI code if needed
 
 export default function ClubDetailsScreen() {
+  const { id } = useLocalSearchParams();
+  const { session } = useSession();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("overview");
+
+  const [club, setClub] = useState<ClubProfile | null>(null);
+  const [members, setMembers] = useState<ClubMember[]>([]);
+  const [activities, setActivities] = useState<ClubActivity[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Manage Tab State
   const [searchQuery, setSearchQuery] = useState("");
@@ -156,17 +179,107 @@ export default function ClubDetailsScreen() {
   const [isManageOpen, setIsManageOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<any>(null);
 
-  const filteredMembers = useMemo(() => {
-    return FULL_MEMBERS.filter((m) =>
-      m.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+  const [logoError, setLogoError] = useState(false);
+  const [coverError, setCoverError] = useState(false);
+
+  useEffect(() => {
+    if (club) {
+      setLogoError(false);
+      setCoverError(false);
+    }
+  }, [club]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (id) {
+        loadClubDetails();
+      }
+    }, [id])
+  );
+
+  // Fetch members when tab changes to 'members'
+  useEffect(() => {
+    if (activeTab === "members" && id) {
+      fetchMembers();
+    }
+    if (activeTab === "activities" && id) {
+      fetchActivities();
+    }
+  }, [activeTab, id]);
+
+  const loadClubDetails = async () => {
+    try {
+      setLoading(true);
+      const data = await getClubById(id as string, session?.user?.id);
+      setClub(data);
+    } catch (error) {
+      console.error("Error loading club details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMembers = async () => {
+    if (!id) return;
+    const data = await getClubMemberbyClubId(id as string);
+    if (data) {
+      setMembers(data);
+    }
+  };
+
+  const fetchActivities = async () => {
+    if (!id) return;
+    const data = await getClubActivities(id as string);
+    console.log("Activities:", data);
+    if (data) {
+      setActivities(data);
+    }
+  };
 
   const handleAction = (member: any) => {
     if (member.role === "会长") return;
     setSelectedMember(member);
     setIsManageOpen(true);
   };
+
+  if (loading) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <ActivityIndicator size="large" color="#10b981" />
+        <Text style={{ color: "#64748b", marginTop: 12 }}>加载中...</Text>
+      </View>
+    );
+  }
+
+  if (!club) {
+    return (
+      <View
+        style={[
+          styles.container,
+          { justifyContent: "center", alignItems: "center" },
+        ]}
+      >
+        <Text style={{ color: "#64748b" }}>找不到该俱乐部</Text>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={{ marginTop: 20 }}
+        >
+          <Text style={{ color: "#10b981" }}>返回</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const clubStats = [
+    { label: "活跃度", value: club.stats.active || "A", color: "#10b981" },
+    { label: "总ELO", value: club.stats.totalElo, color: "#ffffff" },
+    { label: "胜率", value: club.stats.winRate, color: "#60a5fa" },
+  ];
 
   return (
     <View style={styles.container}>
@@ -177,7 +290,16 @@ export default function ClubDetailsScreen() {
       >
         {/* 1. Header with Cover Image */}
         <View style={styles.headerContainer}>
-          <Image source={{ uri: CLUB_DATA.cover }} style={styles.coverImage} />
+          <Image
+            source={{
+              uri:
+                !coverError && club.cover
+                  ? club.cover
+                  : "https://images.unsplash.com/photo-1521412644187-c49fa356ee68?w=800&q=80",
+            }}
+            style={styles.coverImage}
+            onError={() => setCoverError(true)}
+          />
           <LinearGradient
             colors={["rgba(5,5,5,0.6)", "transparent", "#050505"]}
             style={styles.gradientOverlay}
@@ -189,9 +311,44 @@ export default function ClubDetailsScreen() {
             >
               <ChevronLeft size={20} color="#fff" />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.iconButton}>
-              <MoreHorizontal size={20} color="#fff" />
-            </TouchableOpacity>
+
+            <View style={{ flexDirection: "row", gap: 8 }}>
+              {/* Bookmark Button */}
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  Alert.alert("提示", "置顶公会 (开发中)");
+                }}
+              >
+                <Bookmark size={18} color="#fff" />
+              </TouchableOpacity>
+
+              {/* Mute Button */}
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => {
+                  // Mute toggle (dummy function for now)
+                  Alert.alert("提示", "开启/关闭静音 (开发中)");
+                }}
+              >
+                <BellOff size={18} color="#fff" />
+              </TouchableOpacity>
+
+              {/* Edit Button (Admin Only) */}
+              {(club.role === "会长" || club.role === "管理员") && (
+                <TouchableOpacity
+                  style={styles.iconButton}
+                  onPress={() => {
+                    router.push({
+                      pathname: "/screen/club/edit",
+                      params: { id: club.id },
+                    });
+                  }}
+                >
+                  <MoreHorizontal size={20} color="#fff" />
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
 
@@ -201,7 +358,26 @@ export default function ClubDetailsScreen() {
             {/* Logo Container */}
             <View style={styles.logoWrapper}>
               <View style={styles.logoBorder}>
-                <Image source={{ uri: CLUB_DATA.logo }} style={styles.logo} />
+                {club.logo && !logoError ? (
+                  <Image
+                    source={{ uri: club.logo }}
+                    style={styles.logo}
+                    onError={() => setLogoError(true)}
+                  />
+                ) : (
+                  <View
+                    style={[
+                      styles.logo,
+                      {
+                        backgroundColor: "#1e293b",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      },
+                    ]}
+                  >
+                    <Text style={{ fontSize: 32 }}>🏸</Text>
+                  </View>
+                )}
               </View>
               <View style={styles.levelBadge}>
                 <ShieldCheck size={10} color="#fff" fill="#fff" />
@@ -211,10 +387,19 @@ export default function ClubDetailsScreen() {
 
             {/* Action Buttons */}
             <View style={styles.actions}>
-              <TouchableOpacity style={styles.joinButton}>
-                <Text style={styles.joinButtonText}>加入俱乐部</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.messageButton}>
+              {!club.role && (
+                <TouchableOpacity style={styles.joinButton}>
+                  <Text style={styles.joinButtonText}>加入俱乐部</Text>
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                style={styles.messageButton}
+                onPress={() => {
+                  if (club.contact_wa) {
+                    Linking.openURL(club.contact_wa);
+                  }
+                }}
+              >
                 <MessageSquare size={18} color="#94a3b8" />
               </TouchableOpacity>
             </View>
@@ -223,31 +408,33 @@ export default function ClubDetailsScreen() {
           {/* Title & Bio */}
           <View style={styles.detailsContainer}>
             <View style={styles.titleRow}>
-              <Text style={styles.clubName}>{CLUB_DATA.name}</Text>
-              <View style={styles.tagBadge}>
-                <Text style={styles.tagText}>{CLUB_DATA.tag}</Text>
-              </View>
+              <Text style={styles.clubName}>{club.name}</Text>
+              {club.tag && (
+                <View style={styles.tagBadge}>
+                  <Text style={styles.tagText}>{club.tag}</Text>
+                </View>
+              )}
             </View>
 
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
                 <MapPin size={12} color="#10b981" />
-                <Text style={styles.metaText}>{CLUB_DATA.location}</Text>
+                <Text style={styles.metaText}>{club.location}</Text>
               </View>
               <View style={styles.metaItem}>
                 <Users size={12} color="#64748b" />
                 <Text style={styles.metaText}>
-                  {CLUB_DATA.memberCount}/{CLUB_DATA.maxMembers}
+                  {club.memberCount}/{club.maxMembers}
                 </Text>
               </View>
             </View>
 
-            <Text style={styles.bioText}>{CLUB_DATA.bio}</Text>
+            <Text style={styles.bioText}>{club.bio}</Text>
           </View>
 
           {/* Core Stats */}
           <View style={styles.statsRow}>
-            {CLUB_DATA.stats.map((stat, idx) => (
+            {clubStats.map((stat, idx) => (
               <View key={idx} style={styles.statCard}>
                 <Text style={styles.statLabel}>{stat.label}</Text>
                 <Text style={[styles.statValue, { color: stat.color }]}>
@@ -259,7 +446,7 @@ export default function ClubDetailsScreen() {
 
           {/* Tab Navigation */}
           <View style={styles.tabBar}>
-            {["overview", "members", "rankings", "events"].map((tab) => (
+            {["overview", "members", "activities", "events"].map((tab) => (
               <TouchableOpacity
                 key={tab}
                 onPress={() => setActiveTab(tab)}
@@ -275,8 +462,8 @@ export default function ClubDetailsScreen() {
                     ? "概览"
                     : tab === "members"
                     ? "成员"
-                    : tab === "rankings"
-                    ? "排行"
+                    : tab === "activities"
+                    ? "球局"
                     : "赛事"}
                 </Text>
                 {activeTab === tab && <View style={styles.activeIndicator} />}
@@ -294,7 +481,7 @@ export default function ClubDetailsScreen() {
                   <Text style={styles.announceTitle}>最新公告</Text>
                 </View>
                 <Text style={styles.announceContent}>
-                  {CLUB_DATA.announcement}
+                  {club.announcement || "暂无公告"}
                 </Text>
                 <MessageSquare
                   size={80}
@@ -441,15 +628,17 @@ export default function ClubDetailsScreen() {
                 </View>
               </View>
 
-              {/* Management Team */}
+              {/* Team Members */}
               <View style={styles.memberGroup}>
                 <View style={styles.groupHeader}>
-                  <ShieldCheck size={12} color="#64748b" />
-                  <Text style={styles.groupTitle}>管理团队</Text>
+                  <Users size={12} color="#64748b" />
+                  <Text style={styles.groupTitle}>团队成员</Text>
                 </View>
                 <View style={styles.memberList}>
-                  {filteredMembers
-                    .filter((m) => m.role !== "成员")
+                  {members
+                    .filter((m) =>
+                      m.name.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
                     .map((member) => (
                       <MemberRow
                         key={member.id}
@@ -457,45 +646,47 @@ export default function ClubDetailsScreen() {
                         onAction={handleAction}
                       />
                     ))}
+                  {members.length === 0 && (
+                    <Text
+                      style={{
+                        color: "#64748b",
+                        textAlign: "center",
+                        padding: 20,
+                      }}
+                    >
+                      暂无成员
+                    </Text>
+                  )}
                 </View>
               </View>
+            </View>
+          )}
 
-              {/* Core Members */}
-              <View style={styles.memberGroup}>
-                <View
-                  style={[
-                    styles.groupHeader,
-                    { justifyContent: "space-between" },
-                  ]}
+          {/* Activities Content */}
+          {activeTab === "activities" && (
+            <View style={styles.activitiesContainer}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>UPCOMING GAMES</Text>
+                <TouchableOpacity
+                  style={styles.addButton}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/screen/club/create_activity",
+                      params: { clubId: id },
+                    })
+                  }
                 >
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    <Users size={12} color="#64748b" />
-                    <Text style={styles.groupTitle}>核心成员</Text>
-                  </View>
-                  <View style={styles.filterOptions}>
-                    <Text style={[styles.filterText, { color: "#10b981" }]}>
-                      按战力
-                    </Text>
-                    <Text style={styles.filterText}>按活跃</Text>
-                  </View>
-                </View>
-                <View style={styles.memberList}>
-                  {filteredMembers
-                    .filter((m) => m.role === "成员")
-                    .map((member) => (
-                      <MemberRow
-                        key={member.id}
-                        member={member}
-                        onAction={handleAction}
-                      />
-                    ))}
-                </View>
+                  <Plus size={16} color="#050505" />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.activitiesList}>
+                {activities.map((activity) => (
+                  <ActivityCard key={activity.id} activity={activity} />
+                ))}
+                {activities.length === 0 && (
+                  <Text style={styles.emptyText}>暂无活动</Text>
+                )}
               </View>
             </View>
           )}
@@ -584,18 +775,18 @@ const MemberRow = ({ member, onAction }: { member: any; onAction: any }) => (
           {member.role === "会长" && (
             <Crown size={12} color="#eab308" fill="#eab308" />
           )}
-          {member.role === "副会长" && (
+          {member.role === "管理员" && (
             <ShieldCheck size={12} color="#60a5fa" />
           )}
         </View>
         <View style={styles.rowMeta}>
           <View style={styles.metaBadge}>
             <Zap size={10} color="#f59e0b" />
-            <Text style={styles.metaBadgeText}>ELO {member.elo}</Text>
+            <Text style={styles.metaBadgeText}>ELO {member.totalElo}</Text>
           </View>
           <View style={styles.metaBadge}>
             <Clock size={10} color="#64748b" />
-            <Text style={styles.metaBadgeText}>{member.status}</Text>
+            <Text style={styles.metaBadgeText}>{member.onlineStatus}</Text>
           </View>
         </View>
       </View>
@@ -638,13 +829,261 @@ const ActionButton = ({
   </TouchableOpacity>
 );
 
+const ActivityCard = ({ activity }: { activity: ClubActivity }) => {
+  const progress = Math.min(activity.joined / activity.total, 1);
+  const isFull = activity.joined >= activity.total;
+
+  return (
+    <View style={styles.activityCard}>
+      <View style={styles.activityPadding}>
+        <View style={styles.activityMainRow}>
+          {/* Left Side: Info */}
+          <View style={{ flex: 1, marginRight: 12 }}>
+            {/* Header: Time & Tags */}
+            <View style={styles.activityHeaderRow}>
+              <View style={styles.timeTag}>
+                <Clock size={12} color="#94a3b8" />
+                <Text style={styles.timeTagText}>
+                  {activity.date} • {activity.startTime}-{activity.endTime}
+                </Text>
+              </View>
+              {(activity.status === "即将满员" ||
+                activity.status === "已满") && (
+                <View style={styles.hotTag}>
+                  <Flame size={10} color="#f97316" fill="#f97316" />
+                  <Text style={styles.hotTagText}>HOT</Text>
+                </View>
+              )}
+            </View>
+
+            <Text style={styles.activityTitle} numberOfLines={2}>
+              {activity.title}
+            </Text>
+
+            <View style={styles.courtTag}>
+              <Text style={styles.courtTagText}>{activity.courts} COURTS</Text>
+            </View>
+
+            {/* Location Row */}
+            <TouchableOpacity
+              style={styles.compactLocationRow}
+              onPress={() => {
+                const q = activity.location;
+                const ll = encodeURIComponent(
+                  activity.latitude + "," + activity.longitude
+                );
+                Linking.openURL(`waze://?q=${q}&ll=${ll}&navigate=yes`);
+              }}
+            >
+              <MapPin size={14} color="#60a5fa" />
+              <Text style={styles.compactLocationText} numberOfLines={1}>
+                {activity.location}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Right Side: Price */}
+          <View style={styles.priceColumn}>
+            <View style={styles.priceBadge}>
+              <View style={styles.priceRowItem}>
+                <Text style={styles.priceLabelSmall}>M</Text>
+                <Text style={styles.priceValueSmall}>{activity.priceMale}</Text>
+              </View>
+              <View style={styles.priceDivider} />
+              <View style={styles.priceRowItem}>
+                <Text style={[styles.priceLabelSmall, { color: "#ec4899" }]}>
+                  F
+                </Text>
+                <Text style={styles.priceValueSmall}>
+                  {activity.priceFemale}
+                </Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Footer: Progress */}
+        <View style={styles.cardFooter}>
+          <View style={styles.progressBarBg}>
+            <View
+              style={[
+                styles.progressFill,
+                {
+                  width: `${progress * 100}%`,
+                  backgroundColor: isFull ? "#ef4444" : "#10b981",
+                },
+              ]}
+            />
+          </View>
+          <View style={styles.footerInfo}>
+            <View style={styles.participantsAvatarsSmall}>
+              {[...Array(Math.min(activity.joined, 3))].map((_, i) => (
+                <View key={i} style={styles.avatarCircleSmall}>
+                  <Text style={{ fontSize: 8 }}>👤</Text>
+                </View>
+              ))}
+            </View>
+            <Text style={styles.slotsTextSmall}>
+              {activity.joined}/{activity.total} Joined
+            </Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
+  // ... existing styles ...
+  activitiesContainer: { paddingHorizontal: 4, gap: 16, paddingBottom: 40 },
+  addButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: "#10b981",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  activitiesList: { gap: 12 },
+  activityCard: {
+    backgroundColor: "rgba(30, 41, 59, 0.4)",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.05)",
+    overflow: "hidden",
+  },
+  activityPadding: { padding: 16 },
+  activityMainRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 16,
+  },
+  activityHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 4,
+  },
+  activityTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 8,
+    lineHeight: 22,
+  },
+
+  timeTag: { flexDirection: "row", alignItems: "center", gap: 4 },
+  timeTagText: { fontSize: 11, color: "#94a3b8", fontWeight: "600" },
+
+  courtTag: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(16, 185, 129, 0.1)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  courtTagText: { fontSize: 9, fontWeight: "bold", color: "#10b981" },
+
+  hotTag: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    backgroundColor: "rgba(249, 115, 22, 0.1)",
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  hotTagText: {
+    fontSize: 9,
+    fontWeight: "900",
+    color: "#f97316",
+    fontStyle: "italic",
+  },
+
+  compactLocationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 4,
+    marginBottom: 10,
+    // // backgroundColor: "rgba(59, 130, 246, 0.1)", // Light blue bg for interactivity
+    // paddingVertical: 6,
+    // paddingHorizontal: 10,
+    // borderRadius: 12,
+    alignSelf: "flex-start",
+    // borderWidth: 1,
+    // borderColor: "rgba(59, 130, 246, 0.2)",
+  },
+  compactLocationText: {
+    flex: 1,
+    fontSize: 11,
+    color: "#93c5fd", // Light blue text
+    fontWeight: "500",
+  },
+
+  // Right Price Column
+  priceColumn: { alignItems: "flex-end", paddingTop: 4 },
+  priceBadge: {
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
+    borderRadius: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  priceRowItem: { flexDirection: "row", alignItems: "baseline", gap: 4 },
+  priceLabelSmall: { fontSize: 10, fontWeight: "900", color: "#60a5fa" },
+  priceValueSmall: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#fff",
+    fontStyle: "italic",
+  },
+  priceDivider: {
+    height: 1,
+    width: "100%",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    marginVertical: 4,
+  },
+
+  // Footer
+  cardFooter: { gap: 8 },
+  progressBarBg: {
+    height: 4,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    borderRadius: 2,
+    overflow: "hidden",
+  },
+  progressFill: { height: "100%", borderRadius: 2 },
+  footerInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  participantsAvatarsSmall: { flexDirection: "row", paddingLeft: 6 },
+  avatarCircleSmall: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#334155",
+    borderWidth: 1,
+    borderColor: "#1e293b",
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: -6,
+  },
+  slotsTextSmall: { fontSize: 10, color: "#64748b", fontWeight: "600" },
+  emptyText: { color: "#64748b", textAlign: "center", marginTop: 20 },
+
   container: {
     flex: 1,
     backgroundColor: "#050505",
   },
   headerContainer: {
-    height: 288, // h-72
+    height: 240, // h-60
     width: "100%",
     position: "relative",
   },

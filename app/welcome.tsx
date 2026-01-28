@@ -204,10 +204,10 @@ export default function WelcomeScreen() {
           </View>
 
           <Animated.View style={[styles.textContainer, textStyle]}>
-            <Text style={styles.appName}>CrossCourt</Text>
+            <Text style={styles.appName}>菜就多练</Text>
             <View style={styles.taglineContainer}>
               <View style={styles.dividerLine} />
-              <Text style={styles.tagline}>PRECISION & PASSION</Text>
+              <Text style={styles.tagline}>这里的汗水，比工作更痛快</Text>
               <View style={styles.dividerLine} />
             </View>
             <Text style={styles.subtitle}>连接球友 · 掌控竞技</Text>
